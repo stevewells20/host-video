@@ -1,5 +1,5 @@
-#ifndef GstHoughCircle_H					// avoid repeated expansion
-#define GstHoughCircle_H
+#ifndef GSTABSFILTER_H					// avoid repeated expansion
+#define GSTABSFILTER_H
 
 #include "opencv2/imgcodecs.hpp"
 #include <opencv2/highgui/highgui.hpp>
@@ -9,38 +9,37 @@
 #include <stdio.h>
 #include <string>
 
-#include "GstAbsFilter.h"
-
 using namespace cv;
 using namespace std;
 
+struct TrackbarStruct {
+	string name;
+	int min;
+	int max;
+	int cap;
+};
 
-class GstHoughCircle : public GstAbsFilter {
+class GstAbsFilter {
 public:
-	const static int numTrackbars = 3 ;
-	TrackbarStruct trackbars[numTrackbars];
+	TrackbarStruct trackbars[2];
 	bool on = true;
 
-	enum trackType {MIN_RADIUS, MAX_RADIUS, DISPERSION};
+	enum trackType {RADIUS, DISPERSION};
 
-	GstHoughCircle()
+	GstAbsFilter()
 	 {
-		cout << "GstHoughCircle created!" << endl;
+		cout << "GstAbsFilter created!" << endl;
 		///////
 		// trackbars[x] = {string "Name_of_variable",
 		//								int min_slider,
 		//								int max_slider,
 		//								int max_capacity }
-		trackbars[MIN_RADIUS] = {"min Radius", 15, 200};
-		trackbars[MAX_RADIUS] = {"max Radius", 40, 200};
-		trackbars[DISPERSION] = {"Dispersion", 20, 200};
+		trackbars[0] = {"Radius", 0, 20, 200};
+		trackbars[1] = {"Dispersion", 0, 20, 200};
 		//////
 	}
 
-	~GstHoughCircle() { cout << "GstHoughCircle removed!" << endl; }
-
-	static void onChange(int i, void* v) {
-		cout << i << endl;}
+	~GstAbsFilter() { cout << "GstAbsFilter removed!" << endl; }
 
 
 void filter(Mat &src, Mat &src_gray, Mat &dst) {
@@ -49,8 +48,8 @@ void filter(Mat &src, Mat &src_gray, Mat &dst) {
     medianBlur(src_gray, src_gray, 5);
     vector<Vec3f> circles;
     HoughCircles(src_gray, circles, HOUGH_GRADIENT, 1,
-                 src_gray.rows / trackbars[DISPERSION].val,
-                 100, 30, trackbars[MIN_RADIUS].val, trackbars[MAX_RADIUS].val
+                 src_gray.rows / 20,
+                 100, 30, trackbars[RADIUS].min, trackbars[RADIUS].max
                  );
     for (size_t i = 0; i < circles.size(); i++) {
       Vec3i c = circles[i];

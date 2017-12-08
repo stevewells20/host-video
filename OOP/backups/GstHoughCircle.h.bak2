@@ -1,0 +1,96 @@
+#include "opencv2/imgcodecs.hpp"
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/objdetect.hpp>
+#include <opencv2/opencv.hpp>
+#include <stdio.h>
+#include <string>
+
+<<<<<<< HEAD
+#include "GstAbsFilter.h"
+=======
+#include "GstStreamCapper.h"
+>>>>>>> 1e5d002238e70f6c0d0e20f573d38a49519d8911
+
+using namespace cv;
+using namespace std;
+
+class GstHoughCircle {
+
+public:
+	int minRad = 83;
+	int maxRad = 104;
+	int dispersionDist = 50;
+	string windowName = "newHoughFilter";
+	GstStreamCapper* capper;
+
+	GstHoughCircle() {
+		cout << "GstHoughCircle created!" << endl;
+	}
+	GstHoughCircle(GstStreamCapper* newCapper) {
+		cout << "GstHoughCircle created!" << endl;
+		capper = newCapper;
+	}
+
+	void filterRun() {
+		namedWindow(windowName, CV_WINDOW_AUTOSIZE);
+		createTrackbar("Min Radius:", windowName, &minRad, 200, onChange, this);
+	  createTrackbar("Max Radius:", windowName, &maxRad, 200, onChange, this);
+	  createTrackbar("Min Dispersion:", windowName, &dispersionDist, 200, onChange, this);
+	  /// Show the image
+	  CircleHoughs();
+
+	}
+
+static void onChange(int, void* ptr) {
+	GstHoughCircle *that = (GstHoughCircle*)ptr;
+	that->CircleHoughs();
+}
+
+void CircleHoughs() {
+	bool go = true;
+  while (go) {
+    capper->cap >> capper->src;
+    if (capper->src.empty())
+      return;
+    capper->src.copyTo(capper->dst);
+
+    // Convert the image to grayscale
+    cvtColor(capper->src, capper->src_gray, CV_BGR2GRAY);
+
+///////////////////////////////Image manipulation/////////////////////////////////
+
+    medianBlur(capper->src_gray, capper->src_gray, 5);
+    vector<Vec3f> circles;
+    HoughCircles(capper->src_gray, circles, HOUGH_GRADIENT, 1,
+                 capper->src_gray.rows / dispersionDist, // change this value to detect
+                                                 // circles with differen$
+                 100, 30, minRad,
+                 maxRad // change the last two parameters (1, 30)
+                 // (min_radius & max_radius) to detect larger circles
+                 );
+    for (size_t i = 0; i < circles.size(); i++) {
+      Vec3i c = circles[i];
+      Point center = Point(c[0], c[1]);
+      // circle center
+      circle(capper->dst, center, 1, Scalar(0, 100, 100), 3, LINE_AA);
+      // circle outline
+      int radius = c[2];
+      circle(capper->dst, center, radius, Scalar(255, 0, 255), 3, LINE_AA);
+    }
+
+		//////////////////////////////////////////////////////////////////////////
+
+    imshow(windowName, capper->dst);
+    int key;
+    key = waitKey(30);
+  }
+
+}
+
+
+
+
+
+
+};
