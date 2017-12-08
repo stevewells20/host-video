@@ -1,0 +1,220 @@
+// Compile with: $ g++ opencv_gst.cpp -o opencv_gst `pkg-config --cflags --libs opencv`
+
+#include <stdio.h>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/opencv.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include "opencv2/imgcodecs.hpp"
+#include <opencv2/objdetect.hpp>
+
+using namespace cv;
+using namespace std;
+
+//![canny.variables]
+int edgeThresh = 1;
+int lowThreshold;
+int const max_lowThreshold = 100;
+int ratio = 3;
+int kernel_size = 3;
+const char* window_name = "Edge Map";
+
+//![circles.variables]
+int minRad=83;
+int maxRad=104;
+int dispersionDist=50;
+
+//![hog.variables]
+HOGDescriptor hog;
+int hogScale = 100;
+
+//![global.variables]
+Mat src, src_gray;
+Mat dst, detected_edges;
+VideoWriter writer;
+VideoCapture cap;
+
+
+void HOGDetect(int, void*)
+{
+  while (true) {
+    cap >> src;
+    if (src.empty())
+         return;
+    src.copyTo(dst);
+    vector<Rect> found, found_filtered;
+    double t = (double) getTickCount();
+    // Run the detector with default parameters. to get a higher hit-rate
+    // (and more false alarms, respectively), decrease the hitThreshold and
+    // groupThreshold (set groupThreshold to 0 to turn off the grouping completely).
+    hog.detectMultiScale(src, found, 0, Size(8,8), Size(32,32), double(hogScale/100.0), 2);
+    cout << double(hogScale/100.0) << endl;
+    t = (double) getTickCount() - t;
+    cout << "detection time = " << (t*1000./cv::getTickFrequency()) << " ms" << endl;
+    for(size_t i = 0; i < found.size(); i++ )
+    {
+        Rect r = found[i];
+        size_t j;
+        // Do not add small detections inside a bigger detection.
+        for ( j = 0; j < found.size(); j++ )
+            if ( j != i && (r & found[j]) == r )
+                break;
+        if ( j == found.size() )
+            found_filtered.push_back(r);
+    }
+    for (size_t i = 0; i < found_filtered.size(); i++)
+    {
+        Rect r = found_filtered[i];
+        // The HOG detector returns slightly larger rectangles than the real objects,
+        // so we slightly shrink the rectangles to get a nicer output.
+        r.x += cvRound(r.width*0.1);
+        r.width = cvRound(r.width*0.8);
+        r.y += cvRound(r.height*0.07);
+        r.height = cvRound(r.height*0.8);
+        rectangle(dst, r.tl(), r.br(), cv::Scalar(0,255,0), 3);
+    }
+    writer << src;
+
+    imshow( window_name, dst );
+    int key;
+    key = waitKey( 30 );
+  }
+}
+
+void CannyThreshold(int, void*)
+{
+ while (true) {
+
+  cap >> src;
+  if (src.empty())
+	return;
+
+  // Convert the image to grayscale
+  cvtColor( src, src_gray, CV_BGR2GRAY );
+  // Reduce noise with a kernel 3x3
+  blur( src_gray, detected_edges, Size(kernel_size,kernel_size) );
+  // Canny detector
+  Canny( detected_edges, detected_edges, lowThreshold, lowThreshold*ratio, kernel_size );
+  // Using Canny's output as a mask, we display our result
+  dst = Scalar::all(0);
+
+  src.copyTo( dst, detected_edges);
+  writer << src;
+
+  imshow( window_name, dst );
+  int key;
+  key = waitKey( 30 );
+
+ }
+}
+
+void CircleHoughs(int, void*)
+{
+ while (true) {
+  cap >> src;
+  if (src.empty())
+        return;
+  src.copyTo( dst );
+
+  // Convert the image to grayscale
+  cvtColor( src, src_gray, CV_BGR2GRAY );
+
+    medianBlur(src_gray, src_gray, 5);
+    vector<Vec3f> circles;
+    HoughCircles(src_gray, circles, HOUGH_GRADIENT, 1,
+                 src_gray.rows/dispersionDist,  // change this value to detect circles with differen$
+                 100, 30, minRad, maxRad // change the last two parameters (1, 30)
+            // (min_radius & max_radius) to detect larger circles
+    );
+    for( size_t i = 0; i < circles.size(); i++ )
+    {
+        Vec3i c = circles[i];
+        Point center = Point(c[0], c[1]);
+        // circle center
+        circle( dst, center, 1, Scalar(0,100,100), 3, LINE_AA);
+        // circle outline
+        int radius = c[2];
+        circle( dst, center, radius, Scalar(255,0,255), 3, LINE_AA);
+    }
+  writer << src;
+
+  imshow( window_name, dst );
+  int key;
+  key = waitKey( 30 );
+
+ }
+}
+
+void p_hog() {
+  hog.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector());
+  /// Create a Trackbar for user to enter threshold
+  createTrackbar( "HOG Scale:", window_name, &hogScale, 200, HOGDetect );
+  /// Show the image
+  HOGDetect(0, 0);
+}
+
+void h_circles() {
+  /// Create a Trackbar
+  createTrackbar( "Min Radius:", window_name, &minRad, 200, CircleHoughs);
+  createTrackbar( "Max Radius:", window_name, &maxRad, 200, CircleHoughs);
+  createTrackbar( "Min Dispersion:", window_name, &dispersionDist, 200, CircleHoughs);
+  /// Show the image
+  CircleHoughs(0, 0);
+
+ }
+
+void canny() {
+  /// Create a Trackbar for user to enter threshold
+  createTrackbar( "Min Threshold:", window_name, &lowThreshold, max_lowThreshold, CannyThreshold );
+  /// Show the image
+  CannyThreshold(0, 0);
+}
+
+
+int main(int argc, char** argv) {
+
+    // first part of sender pipeline
+    cap.open("udpsrc port=5000 caps=application/x-rtp ! "
+			"rtph264depay ! "
+			"avdec_h264 skip-frame=0 ! "
+			//"video/x-raw, format=BGR, width=640,height=480 ! "
+			//"videoconvert ! "
+			//"video/x-raw, framerate=40/1, width=640, height=480, format=I420 ! "
+			//"videoconvert ! "
+			//"video/x-raw, framerate=40/1, width=640, height=480, format=RGB ! "
+			"videoconvert ! "
+			"appsink ");
+    if (!cap.isOpened()) {
+        printf("=ERR= can't create video capture\n");
+        return -1;
+    }
+
+    // second part of sender pipeline
+    writer.open("appsrc caps=video/x-raw, framerate=40/1, width=640, height=480, format=RGB ! "
+		"videoconvert ! "
+		"autovideosink sync=false"
+                , 0, (double)30, Size(640, 480), true);
+    if (!writer.isOpened()) {
+        printf("=ERR= can't create video writer\n");
+        return -1;
+    }
+
+  cap >> src;
+
+  /// Create a matrix of the same type and size as src (for dst)
+  dst.create( src.size(), src.type() );
+
+  /// Convert the image to grayscale
+  cvtColor( src, src_gray, CV_BGR2GRAY );
+
+  /// Create a window
+  namedWindow( window_name, CV_WINDOW_AUTOSIZE );
+
+  //canny();
+  //h_circles();
+  p_hog();
+
+  /// Wait until user exit program by pressing a key
+  waitKey(0);
+
+  return 0;
+}

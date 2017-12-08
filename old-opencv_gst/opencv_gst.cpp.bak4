@@ -1,0 +1,120 @@
+// Compile with: $ g++ opencv_gst.cpp -o opencv_gst `pkg-config --cflags --libs opencv`
+
+#include <stdio.h>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/opencv.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include "opencv2/imgcodecs.hpp"
+
+using namespace cv;
+
+//![variables]
+int edgeThresh = 1;
+int lowThreshold;
+int const max_lowThreshold = 100;
+int ratio = 3;
+int kernel_size = 3;
+const char* window_name = "Edge Map";
+//![variables]
+Mat src, src_gray;
+Mat dst, detected_edges;
+VideoWriter writer;
+VideoCapture cap;
+
+void CannyThreshold(int, void*)
+{
+while (true) {
+  cap >> src;
+  if (src.empty())
+	return;
+
+  /// Convert the image to grayscale
+  cvtColor( src, src_gray, CV_BGR2GRAY );
+
+  /// Reduce noise with a kernel 3x3
+  blur( src_gray, detected_edges, Size(kernel_size,kernel_size) );
+
+  /// Canny detector
+  Canny( detected_edges, detected_edges, lowThreshold, lowThreshold*ratio, kernel_size );
+
+  /// Using Canny's output as a mask, we display our result
+  dst = Scalar::all(0);
+
+  src.copyTo( dst, detected_edges);
+  writer << src;
+  
+  imshow( window_name, dst );
+  int key;
+  key = waitKey( 30 );
+
+}
+
+
+ }
+
+int main(int argc, char** argv) {
+
+    // Original gstreamer pipeline: 
+    //      == Sender ==
+    //      gst-launch-1.0 v4l2src 
+    //      ! video/x-raw, framerate=30/1, width=640, height=480, format=RGB 
+    //      ! videoconvert
+    //      ! x264enc noise-reduction=10000 tune=zerolatency byte-stream=true threads=4
+    //      ! mpegtsmux 
+    //      ! udpsink host=localhost port=5000
+    //      
+    //      == Receiver ==
+    //      gst-launch-1.0 -ve udpsrc port=5000
+    //      ! tsparse ! tsdemux 
+    //      ! h264parse ! avdec_h264 
+    //      ! videoconvert 
+    //      ! ximagesink sync=false
+
+    // first part of sender pipeline
+    cap.open("udpsrc port=5000 caps=application/x-rtp ! "
+			"rtph264depay ! "
+			"avdec_h264 skip-frame=0 ! "
+			//"video/x-raw, format=BGR, width=640,height=480 ! "
+			//"videoconvert ! "
+			//"video/x-raw, framerate=40/1, width=640, height=480, format=I420 ! "
+			//"videoconvert ! "
+			//"video/x-raw, framerate=40/1, width=640, height=480, format=RGB ! "
+			"videoconvert ! "
+			"appsink ");
+    if (!cap.isOpened()) {
+        printf("=ERR= can't create video capture\n");
+        return -1;
+    }
+
+    // second part of sender pipeline
+    writer.open("appsrc caps=video/x-raw, framerate=40/1, width=640, height=480, format=RGB ! "
+		"videoconvert ! "
+		"autovideosink sync=false"
+                , 0, (double)30, Size(640, 480), true);
+    if (!writer.isOpened()) {
+        printf("=ERR= can't create video writer\n");
+        return -1;
+    }
+
+  cap >> src;
+ 
+  /// Create a matrix of the same type and size as src (for dst)
+  dst.create( src.size(), src.type() );
+
+  /// Convert the image to grayscale
+  cvtColor( src, src_gray, CV_BGR2GRAY );
+
+  /// Create a window
+  namedWindow( window_name, CV_WINDOW_AUTOSIZE );
+
+  /// Create a Trackbar for user to enter threshold
+  createTrackbar( "Min Threshold:", window_name, &lowThreshold, max_lowThreshold, CannyThreshold );
+
+  /// Show the image
+  CannyThreshold(0, 0);
+
+  /// Wait until user exit program by pressing a key
+  waitKey(0);
+
+  return 0;
+}
