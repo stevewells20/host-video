@@ -1,5 +1,5 @@
 #include "GstStreamCapper.h"
-// #include "GstHoughCircle.h"
+#include "GstHoughCircle.h"
 // #include "GstFaceDetect.h"
 #include <time.h>
 
@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
 
   GstStreamCapper gstr(5000);
 
-	GstAbsFilter f_test;
+	GstHoughCircle f_test;
 
 	gstr.addFilter(&f_test);
 	gstr.run();

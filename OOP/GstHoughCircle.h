@@ -17,14 +17,16 @@ using namespace std;
 
 class GstHoughCircle : public GstAbsFilter {
 public:
-	const static int numTrackbars = 3 ;
-	TrackbarStruct trackbars[numTrackbars];
+
 	bool on = true;
 
 	enum trackType {MIN_RADIUS, MAX_RADIUS, DISPERSION};
 
 	GstHoughCircle()
 	 {
+		GstAbsFilter::numTrackbars=3;
+		GstAbsFilter::trackbars=new TrackbarStruct[3];
+
 		cout << "GstHoughCircle created!" << endl;
 		///////
 		// trackbars[x] = {string "Name_of_variable",
@@ -37,7 +39,9 @@ public:
 		//////
 	}
 
-	~GstHoughCircle() { cout << "GstHoughCircle removed!" << endl; }
+	~GstHoughCircle() {
+		cout << "GstHoughCircle removed!" << endl;
+	}
 
 	static void onChange(int i, void* v) {
 		cout << i << endl;}

@@ -137,9 +137,9 @@ public:
     cout << ".run" << endl;
     namedWindow(windowName, CV_WINDOW_AUTOSIZE);
     assembleTrackbars();
-
+		// int framecount = 100;
+		// for (int count = 0; count < framecount; count++) {
     while (true) {
-
       for (int i = 0; i < currentFilterCount; i++) {
         gstFilters[0]->filter(src, src_gray, dst);
       }
