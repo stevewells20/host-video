@@ -16,6 +16,9 @@ using namespace std;
 
 
 class GstHoughCircle : public GstAbsFilter {
+private:
+	Mat temp;
+
 public:
 
 	bool on = true;
@@ -47,13 +50,14 @@ public:
 		cout << i << endl;}
 
 
-void filter(Mat &src, Mat &src_gray, Mat &dst) {
+void filter(const Mat &src, const Mat &src_gray, Mat &dst) {
 	if (on) {
 ///////////////////////////////Image manipulation//////////////////////////////
-    medianBlur(src_gray, src_gray, 5);
+		// cout << "GstHoughCircle.filter()" << endl;
+    medianBlur(src_gray, temp, 5);
     vector<Vec3f> circles;
-    HoughCircles(src_gray, circles, HOUGH_GRADIENT, 1,
-                 src_gray.rows / trackbars[DISPERSION].val,
+    HoughCircles(temp, circles, HOUGH_GRADIENT, 1,
+                 temp.rows / trackbars[DISPERSION].val,
                  100, 30, trackbars[MIN_RADIUS].val, trackbars[MAX_RADIUS].val
                  );
     for (size_t i = 0; i < circles.size(); i++) {

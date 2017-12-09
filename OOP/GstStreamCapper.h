@@ -40,23 +40,29 @@ private:
     cout << "._make_pipe" << endl;
     _capFullString =
         "udpsrc port=" + port + " caps=application/x-rtp ! " +
-        codecStore[codec][DEPAY] + " ! " + codecStore[codec][DECODE] + " ! " +
-        /// Comment out for no preview window ///
-        "tee name=split ! "
+        codecStore[codec][DEPAY] + " ! " +
+				codecStore[codec][DECODE];
+    if (showLive) _capFullString += " ! "
+		    "tee name=pSplit ! "
         "queue ! "
         "videoconvert ! "
-        "autovideosink sync=" +
-        codecStore[codec][SYNC] + " split. ! "
-                                  "queue ! "
-                                  /////////////////////////////////////////*/
-                                  "videoconvert ! "
-                                  "appsink sync=false";
-
+        "autovideosink sync=" + codecStore[codec][SYNC] + " pSplit. ! "
+        "queue";
+		if (grabVid) _capFullString += " ! "
+				"tee name=vSplit ! "
+				"queue ! "
+				// "h264parse ! "
+				"mpegtsmux ! "
+				"filesink location=" + vidSaveLoc + " vSplit. ! "
+				"queue";
+    _capFullString += " ! "
+		    "videoconvert ! "
+        "appsink drop=true sync=false";
+		cout << _capFullString << endl;
     cap.open(_capFullString.c_str());
   }
 
-  void assembleTrackbars() {
-		int count = 0;
+  void _assemble_trackbars() {
     for (int g = 0; g < currentFilterCount; g++) {
       for (int t = 0; t < gstFilters[g]->numTrackbars; t++) {
         createTrackbar(gstFilters[g]->trackbars[t].name,
@@ -64,10 +70,8 @@ private:
                        &gstFilters[g]->trackbars[t].val,
                        gstFilters[g]->trackbars[t].cap,
                        gstFilters[g]->onChange);
-				count++;
       }
     }
-		currentFilterCount += count;
   }
 
 public:
@@ -76,6 +80,9 @@ public:
   VideoWriter writer;
   VideoCapture cap;
   string windowName = "window1";
+	bool showLive = true;
+	bool grabVid = false;
+	string vidSaveLoc = "video.mp4";
 
   GstStreamCapper() {
     cout << "GstStreamReceiver created" << endl;
@@ -120,6 +127,14 @@ public:
     imwrite(imgName, dst);
   }
 
+	// void saveSrcVideo(string vidName = "video.mpg") {
+	// 	string addedVidSave = _capFullString + " ! videoconvert !"
+	// 													"autovideosink sync=false";
+	// 	cout << addedVidSave << endl;
+	// 	cap.release();
+	// 	cap.open(addedVidSave.c_str());
+	// }
+
   void resetCap() {
     cout << ".resetCap" << endl;
     cap.release();
@@ -136,21 +151,24 @@ public:
   void run() {
     cout << ".run" << endl;
     namedWindow(windowName, CV_WINDOW_AUTOSIZE);
-    assembleTrackbars();
+    _assemble_trackbars();
 		// int framecount = 100;
 		// for (int count = 0; count < framecount; count++) {
-    while (true) {
+		char key = 0;
+    while (key != 'q' && key != 'Q') {
+
       for (int i = 0; i < currentFilterCount; i++) {
-        gstFilters[0]->filter(src, src_gray, dst);
+        gstFilters[i]->filter(src, src_gray, dst);
       }
+
       imshow(windowName, dst);
 
       cap >> src;
       cvtColor(src, src_gray, CV_BGR2GRAY);
       src.copyTo(dst);
-
-      int key;
-      key = waitKey(10);
+			if (key == 's') { snapshot(); key = 0; }
+			// if (key == 'v') { saveSrcVideo(); key = 0; }
+      key = waitKey(20);
     }
   }
 };
