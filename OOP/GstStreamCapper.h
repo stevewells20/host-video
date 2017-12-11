@@ -48,13 +48,13 @@ private:
         "videoconvert ! "
         "autovideosink sync=" + codecStore[codec][SYNC] + " pSplit. ! "
         "queue";
-		if (grabVid) _capFullString += " ! "
-				"tee name=vSplit ! "
-				"queue ! "
-				// "h264parse ! "
-				"mpegtsmux ! "
-				"filesink location=" + vidSaveLoc + " vSplit. ! "
-				"queue";
+		// if (grabVid) _capFullString += " ! "
+		// 		"tee name=vSplit ! "
+		// 		"queue ! "
+		// 		// "h264parse ! "
+		// 		"mpegtsmux ! "
+		// 		"filesink location=" + vidSaveLoc + " vSplit. ! "
+		// 		"queue";
     _capFullString += " ! "
 		    "videoconvert ! "
         "appsink drop=true sync=false";
@@ -80,7 +80,7 @@ public:
   VideoWriter writer;
   VideoCapture cap;
   string windowName = "window1";
-	bool showLive = true;
+	bool showLive = false;
 	bool grabVid = false;
 	string vidSaveLoc = "video.mp4";
 
@@ -110,7 +110,7 @@ public:
   ~GstStreamCapper() { cout << "Cleaning up GstStreamCapper" << endl; }
 
   void addFilter(GstAbsFilter *filter) {
-    if (currentFilterCount == 10)
+    if (currentFilterCount >= 10)
       throw "10 filters is currently the max count, "
             "please change it in GstStreamCapper.h for more";
     gstFilters[currentFilterCount] = filter;
@@ -150,7 +150,7 @@ public:
 
   void run() {
     cout << ".run" << endl;
-    namedWindow(windowName, CV_WINDOW_AUTOSIZE);
+    namedWindow(windowName, WINDOW_NORMAL);
     _assemble_trackbars();
 		// int framecount = 100;
 		// for (int count = 0; count < framecount; count++) {

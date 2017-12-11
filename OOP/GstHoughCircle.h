@@ -46,8 +46,7 @@ public:
 		cout << "GstHoughCircle removed!" << endl;
 	}
 
-	static void onChange(int i, void* v) {
-		cout << i << endl;}
+	static void onChange(int i, void* v) { ; }
 
 
 void filter(const Mat &src, const Mat &src_gray, Mat &dst) {
