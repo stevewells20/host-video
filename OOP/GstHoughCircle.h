@@ -23,12 +23,12 @@ public:
 
 	bool on = true;
 
-	enum trackType {MIN_RADIUS, MAX_RADIUS, DISPERSION};
+	enum trackType {MIN_RADIUS, MAX_RADIUS, DISPERSION, LAST};
 
 	GstHoughCircle()
 	 {
-		GstAbsFilter::numTrackbars=3;
-		GstAbsFilter::trackbars=new TrackbarStruct[3];
+		GstAbsFilter::numTrackbars=LAST;
+		GstAbsFilter::trackbars=new TrackbarStruct[LAST];
 
 		cout << "GstHoughCircle created!" << endl;
 		///////

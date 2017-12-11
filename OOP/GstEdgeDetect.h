@@ -1,5 +1,5 @@
-#ifndef GstFaceDetect_H // avoid repeated expansion
-#define GstFaceDetect_H
+#ifndef GstEdgeDetect_H					// avoid repeated expansion
+#define GstEdgeDetect_H
 
 #include "opencv2/imgcodecs.hpp"
 #include <opencv2/highgui/highgui.hpp>
@@ -14,67 +14,65 @@
 using namespace cv;
 using namespace std;
 
-class GstFaceDetect : public GstAbsFilter {
+
+class GstEdgeDetect : public GstAbsFilter {
+private:
+  Mat detected_edges;
+  int edgeThresh = 1;
+  int lowThreshold;
+  int const max_lowThreshold = 100;
+  int ratio = 3;
+  int kernel_size = 3;
+
 public:
-  bool on = true;
 
-  /// Filter Variables ///
-  bool tryflip;
-  string cascadeStr = "../haarcascades/haarcascade_frontalface_alt.xml";
-  string nestedCascadeStr =
-      "../haarcascades/haarcascade_eye_tree_eyeglasses.xml";
-  CascadeClassifier cascade;
-  CascadeClassifier nestedCascade;
-  int scale = 100;
-  double detectionTime = 0;
-  vector<Rect> faces, faces2;
-  Scalar colors[8];
-  Mat smallImg;
-  Mat smallImgROI;
-  //////////////////////////
-	Mat temp;
+	bool on = true;
 
-  enum trackType { SCALE };
+	enum trackType {MIN_THRESH, MAX_THRESH, LAST};
 
-  GstFaceDetect()
-      : colors{Scalar(255, 0, 0), Scalar(255, 128, 0), Scalar(255, 255, 0),
-               Scalar(0, 255, 0), Scalar(0, 128, 255), Scalar(0, 255, 255),
-               Scalar(0, 0, 255), Scalar(255, 0, 255)} {
-    if (!cascade.load(cascadeStr)) {
-      cout << "Error loading cascade" << endl;
-    }
-    if (!nestedCascade.load(nestedCascadeStr)) {
-      cout << "Error loading nestedCascade" << endl;
-    }
+	GstEdgeDetect()
+	 {
+		GstAbsFilter::numTrackbars=LAST;
+		GstAbsFilter::trackbars=new TrackbarStruct[LAST];
 
-    GstAbsFilter::numTrackbars = 1;
-    GstAbsFilter::trackbars = new TrackbarStruct[GstAbsFilter::numTrackbars];
+		cout << "GstEdgeDetect created!" << endl;
+		///////
+		// trackbars[x] = {string "Name_of_variable",
+		//								int min_slider,
+		//								int max_slider,
+		//								int max_capacity }
+		trackbars[MIN_THRESH] = {"min Threshold", 15, 100};
+		trackbars[MAX_THRESH] = {"max Threshold", 40, 100};
+		// trackbars[DISPERSION] = {"Dispersion", 20, 200};
+		//////
+	}
 
-    cout << "GstFaceDetect created!" << endl;
-    ///////
-    // trackbars[x] = {string "Name_of_variable",
-    //								int min_slider,
-    //								int max_slider,
-    //								int max_capacity
-    //}
-    trackbars[SCALE] = {"Scale", 100, 200};
-    //////
-  }
+	~GstEdgeDetect() {
+		cout << "GstEdgeDetect removed!" << endl;
+	}
 
-  ~GstFaceDetect() { cout << "GstFaceDetect removed!" << endl; }
+	static void onChange(int i, void* v) { ; }
 
-  static void onChange(int i, void *v) { ; }
 
 void filter(const Mat &src, const Mat &src_gray, Mat &dst) {
 	if (on) {
-			////////////////////////////Image manipulation//////////////////////////
-
-
-			////////////////////////////////////////////////////////////////////////
+///////////////////////////////Image manipulation//////////////////////////////
+		// cout << "GstEdgeDetect.filter()" << endl;
+    // Reduce noise with a kernel 3x3
+    blur(src_gray, detected_edges, Size(kernel_size, kernel_size));
+    // Canny detector
+    Canny(detected_edges, dst,
+          trackbars[MIN_THRESH].val,
+          trackbars[MIN_THRESH].val * ratio,
+          kernel_size);
+    // Using Canny's output as a mask, we display our result
+    // dst = Scalar::all(0);
+	////////////////////////////////////////////////////////////////////////////
   }
+}
 
-  double getScale() { return trackbars[SCALE].val / 100.0; }
-  /// End class ///
+
+
 };
 
 #endif

@@ -34,7 +34,7 @@ public:
   //////////////////////////
 	Mat temp;
 
-  enum trackType { SCALE };
+  enum trackType { SCALE, LAST};
 
   GstFaceDetect()
       : colors{Scalar(255, 0, 0), Scalar(255, 128, 0), Scalar(255, 255, 0),
@@ -47,8 +47,8 @@ public:
       cout << "Error loading nestedCascade" << endl;
     }
 
-    GstAbsFilter::numTrackbars = 1;
-    GstAbsFilter::trackbars = new TrackbarStruct[GstAbsFilter::numTrackbars];
+    GstAbsFilter::numTrackbars = LAST;
+    GstAbsFilter::trackbars = new TrackbarStruct[LAST];
 
     cout << "GstFaceDetect created!" << endl;
     ///////

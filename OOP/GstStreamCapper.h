@@ -24,7 +24,7 @@ private:
   int currentFilterCount = 0;
 
   string codecStore[3][3] = {
-      {"rtph264depay", "avdec_h264 skip-frame=0", "false"}, // H264
+      {"rtph264depay", "avdec_h264 skip-frame=5", "false"}, // H264
       {"rtpvp8depay", "avdec_vp8", "true"},                 // VP8
       {"rtprawdepay", "", "true"}                           // RAW
   };
