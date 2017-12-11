@@ -24,9 +24,9 @@ private:
   int currentFilterCount = 0;
 
   string codecStore[3][3] = {
-      {"rtph264depay", "avdec_h264 skip-frame=5", "false"}, // H264
-      {"rtpvp8depay", "avdec_vp8", "true"},                 // VP8
-      {"rtprawdepay", "", "true"}                           // RAW
+      {"rtph264depay",  "avdec_h264", "false"}, // H264
+      {"rtpvp8depay",   "avdec_vp8", "true"}, // VP8
+      {"rtprawdepay", "", "true"} // RAW
   };
 
   string port = "5000";
@@ -159,13 +159,14 @@ public:
 
       for (int i = 0; i < currentFilterCount; i++) {
         gstFilters[i]->filter(src, src_gray, dst);
+        dst.copyTo(src);
       }
 
       imshow(windowName, dst);
 
       cap >> src;
       cvtColor(src, src_gray, CV_BGR2GRAY);
-      src.copyTo(dst);
+      // src.copyTo(dst);
 			if (key == 's') { snapshot(); key = 0; }
 			// if (key == 'v') { saveSrcVideo(); key = 0; }
       key = waitKey(20);

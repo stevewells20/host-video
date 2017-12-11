@@ -11,13 +11,13 @@ int main(int argc, char **argv) {
 
   GstStreamCapper gstr(5000);
 
-	// GstHoughCircle fCircle;
+	GstHoughCircle fCircle;
 	// GstFaceDetect fFace;
   GstEdgeDetect fEdge;
 
-	// gstr.addFilter(&fCircle);
 	// gstr.addFilter(&fFace);
   gstr.addFilter(&fEdge);
+  gstr.addFilter(&fCircle);
 
 	gstr.run();
 

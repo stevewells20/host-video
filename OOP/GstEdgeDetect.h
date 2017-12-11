@@ -60,13 +60,13 @@ void filter(const Mat &src, const Mat &src_gray, Mat &dst) {
 		// cout << "GstEdgeDetect.filter()" << endl;
     // Reduce noise with a kernel 3x3
     blur(src_gray, detected_edges, Size(kernel_size, kernel_size));
+    dst = Scalar::all(0);
     // Canny detector
     Canny(detected_edges, dst,
           trackbars[MIN_THRESH].val,
           trackbars[MIN_THRESH].val * ratio,
           kernel_size);
     // Using Canny's output as a mask, we display our result
-    // dst = Scalar::all(0);
 	////////////////////////////////////////////////////////////////////////////
   }
 }
