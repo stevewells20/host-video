@@ -16,8 +16,8 @@ int main(int argc, char **argv) {
   GstEdgeDetect fEdge;
 
 	// gstr.addFilter(&fFace);
-  gstr.addFilter(&fEdge);
   gstr.addFilter(&fCircle);
+  // gstr.addFilter(&fEdge);
 
 	gstr.run();
 

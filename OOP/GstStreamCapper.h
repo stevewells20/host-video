@@ -158,15 +158,17 @@ public:
     while (key != 'q' && key != 'Q') {
 
       for (int i = 0; i < currentFilterCount; i++) {
+        cout << "Filter# : " << i << endl;
         gstFilters[i]->filter(src, src_gray, dst);
-        dst.copyTo(src);
+        // dst.copyTo(src);
+        cout << "End# : " << i << endl;
       }
 
       imshow(windowName, dst);
 
       cap >> src;
       cvtColor(src, src_gray, CV_BGR2GRAY);
-      // src.copyTo(dst);
+      src.copyTo(dst);
 			if (key == 's') { snapshot(); key = 0; }
 			// if (key == 'v') { saveSrcVideo(); key = 0; }
       key = waitKey(20);
