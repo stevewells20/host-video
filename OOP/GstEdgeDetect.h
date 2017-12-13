@@ -64,7 +64,8 @@ void filter(const Mat &src, const Mat &src_gray, Mat &dst) {
     // Canny detector
     Canny(detected_edges, dst,
           trackbars[MIN_THRESH].val,
-          trackbars[MIN_THRESH].val * ratio,
+          // trackbars[MIN_THRESH].val * ratio, //swapped in next line
+					trackbars[MAX_THRESH].val * ratio,
           kernel_size);
     // Using Canny's output as a mask, we display our result
 	////////////////////////////////////////////////////////////////////////////

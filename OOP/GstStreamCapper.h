@@ -117,6 +117,13 @@ public:
     currentFilterCount++;
   }
 
+	void removeFilter(GstAbsFilter *filter) {
+		for (int i = 0; i < currentFilterCount; i++) {
+			cout << "Not working yet...\n";
+		}
+		// currentFilterCount--;
+	}
+
   void setPort(int portNum) {
     cout << ".setPort" << endl;
     port = to_string(portNum);
