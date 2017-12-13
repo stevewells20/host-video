@@ -86,8 +86,8 @@ public:
         for (size_t i = 0; i < contours.size(); i++) {
           Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255),
                                 rng.uniform(0, 255));
-          drawContours(dst, contours, (int)i, color1, 1, 8, vector<Vec4i>(),
-                       0, Point());
+          // drawContours(dst, contours, (int)i, color1, 1, 8, vector<Vec4i>(),
+          //              0, Point());
           drawContours(dst, hull, (int)i, color2, 1, 8, vector<Vec4i>(), 0,
                        Point());
         }
