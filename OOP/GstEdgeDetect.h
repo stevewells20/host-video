@@ -14,6 +14,8 @@
 using namespace cv;
 using namespace std;
 
+RNG rng(12345);
+
 class GstEdgeDetect : public GstAbsFilter {
 private:
   Mat detected_edges;
@@ -22,9 +24,14 @@ private:
   int const max_lowThreshold = 100;
   int ratio = 3;
   int kernel_size = 3;
+  vector<vector<Point>> contours;
+  vector<Vec4i> hierarchy;
+  vector<vector<Point>> hull;
 
 public:
   bool on = true;
+  bool apply_contuors = true;
+  bool apply_hull = true;
 
   enum trackType { MIN_THRESH, MAX_THRESH, LAST };
 
@@ -51,8 +58,7 @@ public:
 
   void filter(const Mat &src, const Mat &src_gray, Mat &dst) {
     if (on) {
-      ///////////////////////////////Image
-      ///manipulation//////////////////////////////
+      ///////////////////////ImageManipulation//////////////////////////
       // cout << "GstEdgeDetect.filter()" << endl;
       // Reduce noise with a kernel 3x3
       blur(src_gray, detected_edges, Size(kernel_size, kernel_size));
@@ -63,12 +69,35 @@ public:
             trackbars[MAX_THRESH].val * ratio, kernel_size);
       src.copyTo(dst, detected_edges);
       // Using Canny's output as a mask, we display our result
-      ////////////////////////////////////////////////////////////////////////////
+      if (apply_contuors) {
+        cout << "applied" << endl;
+        findContours(detected_edges, contours, hierarchy, RETR_TREE,
+                     CHAIN_APPROX_SIMPLE, Point(0, 0));
+        // Mat drawing = Mat::zeros( canny_output.size(), CV_8UC3 );
+        dst = Scalar::all(0);
+        Scalar color1 = Scalar(255, 0, 0);
+        Scalar color2 = Scalar(0, 255, 0);
+
+        vector<vector<Point>> hull(contours.size());
+        for (size_t i = 0; i < contours.size(); i++) {
+          convexHull(Mat(contours[i]), hull[i], false);
+        }
+        // Mat drawing = Mat::zeros(threshold_output.size(), CV_8UC3);
+        for (size_t i = 0; i < contours.size(); i++) {
+          Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255),
+                                rng.uniform(0, 255));
+          drawContours(dst, contours, (int)i, color1, 1, 8, vector<Vec4i>(),
+                       0, Point());
+          drawContours(dst, hull, (int)i, color2, 1, 8, vector<Vec4i>(), 0,
+                       Point());
+        }
+      }
+      ///////////////////////////////////////////////////////////////////
     }
   }
 
   /// Colored mask edge detection
-  /*//////////////////////////////Image manipulation//////////////////////////////
+  /*//////////////////////////ImageManipulation////////////////////////
 		// cout << "GstEdgeDetect.filter()" << endl;
     // Reduce noise with a kernel 3x3
     blur(src_gray, detected_edges, Size(kernel_size, kernel_size));
@@ -81,10 +110,10 @@ public:
           kernel_size);
 		src.copyTo(dst, detected_edges);
     // Using Canny's output as a mask, we display our result
-	/*/ //////////////////////////////////////////////////////////////////////////
+	/*/ //////////////////////////////////////////////////////////////
 
   /// Black and white edge detection
-  /*//////////////////////////////Image manipulation//////////////////////////////
+  /*//////////////////////////ImageManipulation/////////////////////////
 			// cout << "GstEdgeDetect.filter()" << endl;
 	    // Reduce noise with a kernel 3x3
 	    blur(src_gray, detected_edges, Size(kernel_size, kernel_size));
@@ -96,7 +125,7 @@ public:
 						trackbars[MAX_THRESH].val * ratio,
 	          kernel_size);
 	    // Using Canny's output as a mask, we display our result
-		/*/ //////////////////////////////////////////////////////////////////////////
+		/*/ //////////////////////////////////////////////////////////////////
 };
 
 #endif

@@ -167,6 +167,7 @@ public:
       for (int i = 0; i < currentFilterCount; i++) {
         // cout << "Filter# : " << i << endl;
         gstFilters[i]->filter(src, src_gray, dst);
+				dst.convertTo(src,CV_32FC1);
         // dst.copyTo(src);
         // cout << "End# : " << i << endl;
       }

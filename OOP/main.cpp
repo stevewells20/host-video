@@ -14,14 +14,15 @@ int main(int argc, char **argv) {
 	gstr.showLive = true;
 	gstr.resetCap();
 
-	// GstHoughCircle fCircle;
+	GstHoughCircle fCircle;
 	// GstFaceDetect fFace;
   GstEdgeDetect fEdge;
 	// GstColorCorrect fColor;
 
 	// gstr.addFilter(&fFace);
-  // gstr.addFilter(&fCircle);
+	// gstr.addFilter(&fRect);
   gstr.addFilter(&fEdge);
+	// gstr.addFilter(&fCircle);
 	// gstr.addFilter(&fColor);
 
 	gstr.run();
