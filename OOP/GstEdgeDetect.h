@@ -1,4 +1,4 @@
-#ifndef GstEdgeDetect_H					// avoid repeated expansion
+#ifndef GstEdgeDetect_H // avoid repeated expansion
 #define GstEdgeDetect_H
 
 #include "opencv2/imgcodecs.hpp"
@@ -14,7 +14,6 @@
 using namespace cv;
 using namespace std;
 
-
 class GstEdgeDetect : public GstAbsFilter {
 private:
   Mat detected_edges;
@@ -25,55 +24,79 @@ private:
   int kernel_size = 3;
 
 public:
+  bool on = true;
 
-	bool on = true;
+  enum trackType { MIN_THRESH, MAX_THRESH, LAST };
 
-	enum trackType {MIN_THRESH, MAX_THRESH, LAST};
+  GstEdgeDetect() {
+    GstAbsFilter::numTrackbars = LAST;
+    GstAbsFilter::trackbars = new TrackbarStruct[LAST];
 
-	GstEdgeDetect()
-	 {
-		GstAbsFilter::numTrackbars=LAST;
-		GstAbsFilter::trackbars=new TrackbarStruct[LAST];
+    cout << "GstEdgeDetect created!" << endl;
+    ///////
+    // trackbars[x] = {string "Name_of_variable",
+    //								int min_slider,
+    //								int max_slider,
+    //								int max_capacity
+    //}
+    trackbars[MIN_THRESH] = {"min Threshold", 15, 100};
+    trackbars[MAX_THRESH] = {"max Threshold", 40, 100};
+    // trackbars[DISPERSION] = {"Dispersion", 20, 200};
+    //////
+  }
 
-		cout << "GstEdgeDetect created!" << endl;
-		///////
-		// trackbars[x] = {string "Name_of_variable",
-		//								int min_slider,
-		//								int max_slider,
-		//								int max_capacity }
-		trackbars[MIN_THRESH] = {"min Threshold", 15, 100};
-		trackbars[MAX_THRESH] = {"max Threshold", 40, 100};
-		// trackbars[DISPERSION] = {"Dispersion", 20, 200};
-		//////
-	}
+  ~GstEdgeDetect() { cout << "GstEdgeDetect removed!" << endl; }
 
-	~GstEdgeDetect() {
-		cout << "GstEdgeDetect removed!" << endl;
-	}
+  static void onChange(int i, void *v) { ; }
 
-	static void onChange(int i, void* v) { ; }
+  void filter(const Mat &src, const Mat &src_gray, Mat &dst) {
+    if (on) {
+      ///////////////////////////////Image
+      ///manipulation//////////////////////////////
+      // cout << "GstEdgeDetect.filter()" << endl;
+      // Reduce noise with a kernel 3x3
+      blur(src_gray, detected_edges, Size(kernel_size, kernel_size));
+      dst = Scalar::all(0);
+      // Canny detector
+      Canny(detected_edges, detected_edges, trackbars[MIN_THRESH].val,
+            // trackbars[MIN_THRESH].val * ratio, //swapped in next line
+            trackbars[MAX_THRESH].val * ratio, kernel_size);
+      src.copyTo(dst, detected_edges);
+      // Using Canny's output as a mask, we display our result
+      ////////////////////////////////////////////////////////////////////////////
+    }
+  }
 
-
-void filter(const Mat &src, const Mat &src_gray, Mat &dst) {
-	if (on) {
-///////////////////////////////Image manipulation//////////////////////////////
+  /// Colored mask edge detection
+  /*//////////////////////////////Image manipulation//////////////////////////////
 		// cout << "GstEdgeDetect.filter()" << endl;
     // Reduce noise with a kernel 3x3
     blur(src_gray, detected_edges, Size(kernel_size, kernel_size));
     dst = Scalar::all(0);
     // Canny detector
-    Canny(detected_edges, dst,
+    Canny(detected_edges, detected_edges,
           trackbars[MIN_THRESH].val,
           // trackbars[MIN_THRESH].val * ratio, //swapped in next line
 					trackbars[MAX_THRESH].val * ratio,
           kernel_size);
+		src.copyTo(dst, detected_edges);
     // Using Canny's output as a mask, we display our result
-	////////////////////////////////////////////////////////////////////////////
-  }
-}
+	/*/ //////////////////////////////////////////////////////////////////////////
 
-
-
+  /// Black and white edge detection
+  /*//////////////////////////////Image manipulation//////////////////////////////
+			// cout << "GstEdgeDetect.filter()" << endl;
+	    // Reduce noise with a kernel 3x3
+	    blur(src_gray, detected_edges, Size(kernel_size, kernel_size));
+	    // dst = Scalar::all(0);
+	    // Canny detector
+	    Canny(detected_edges, dst,
+	          trackbars[MIN_THRESH].val,
+	          // trackbars[MIN_THRESH].val * ratio, //swapped in next line
+						trackbars[MAX_THRESH].val * ratio,
+	          kernel_size);
+	    // Using Canny's output as a mask, we display our result
+		/*/ //////////////////////////////////////////////////////////////////////////
 };
 
 #endif

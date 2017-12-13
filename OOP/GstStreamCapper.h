@@ -165,10 +165,10 @@ public:
     while (key != 'q' && key != 'Q') {
 
       for (int i = 0; i < currentFilterCount; i++) {
-        cout << "Filter# : " << i << endl;
+        // cout << "Filter# : " << i << endl;
         gstFilters[i]->filter(src, src_gray, dst);
         // dst.copyTo(src);
-        cout << "End# : " << i << endl;
+        // cout << "End# : " << i << endl;
       }
 
       imshow(windowName, dst);
