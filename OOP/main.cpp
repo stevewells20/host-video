@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
 
 	// gstr.addFilter(&fFace);
   gstr.addFilter(&fCircle);
-  // gstr.addFilter(&fEdge);
+  gstr.addFilter(&fEdge);
 
 	gstr.run();
 
