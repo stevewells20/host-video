@@ -1,8 +1,11 @@
 #include "GstStreamCapper.h"
-#include "GstHoughCircle.h"
-#include "GstFaceDetect.h"
-#include "GstEdgeDetect.h"
-#include "GstColorCorrect.h"
+// #include "GstHoughCircle.h"
+// #include "GstFaceDetect.h"
+// #include "GstEdgeDetect.h"
+// #include "GstColorCorrect.h"
+// #include "GstLaplaceEdgeDetect.h"
+#include "GstTest.h"
+
 #include <time.h>
 
 // #include "GstAbsFilter.h"
@@ -10,25 +13,38 @@
 
 int main(int argc, char **argv) {
 
-  GstStreamCapper gstr(5000);
+	// cout << getBuildInformation() << endl << endl;
+
+  GstStreamCapper gstr(5000,true);
 	gstr.showLive = true;
-	gstr.resetCap();
+	//
+	//
+	// gstr.resetCap();
 
-	GstHoughCircle fCircle;
+	// GstHoughCircle fCircle;
 	// GstFaceDetect fFace;
-  GstEdgeDetect fEdge;
+  // GstEdgeDetect fEdge;
+	// fEdge.apply_contuors = false;
+	// fEdge.apply_hull = false;
+	// fEdge.apply_lines = true;
 	// GstColorCorrect fColor;
+	// GstLaplaceEdgeDetect fLapEdge;
+	GstTest fTest;
 
+	// gstr.addFilter(&fEdge);
 	// gstr.addFilter(&fFace);
-	// gstr.addFilter(&fRect);
-  gstr.addFilter(&fEdge);
 	// gstr.addFilter(&fCircle);
 	// gstr.addFilter(&fColor);
+	// gstr.addFilter(&fLapEdge);
+	gstr.addFilter(&fTest);
 
 	gstr.run();
-
-	// getchar();
+	// gstr.removeFilter(&fColor);
+	// gstr.removeFilter(&fLapEdge);
+	// gstr.removeFilter(&fEdge);
 	// gstr.resetCap();
+	// gstr.run();
+
   cout << "Done!" << endl;
   return 0;
 }

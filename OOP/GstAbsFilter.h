@@ -36,7 +36,8 @@ public:
 	}
 
 	static void onChange(int i, void* v) {
-		cout << i << endl;}
+		// cout << i << endl
+		;}
 
 
 virtual void filter(const Mat &src, const Mat &src_gray, Mat &dst)  = 0;

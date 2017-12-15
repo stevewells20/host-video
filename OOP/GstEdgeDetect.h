@@ -30,8 +30,11 @@ private:
 
 public:
   bool on = true;
-  bool apply_contuors = true;
-  bool apply_hull = true;
+  bool apply_contuors = false;
+  bool apply_hull = false;
+	bool apply_lines = false;
+	Mat cdstP;
+	Mat cdst;
 
   enum trackType { MIN_THRESH, MAX_THRESH, LAST };
 
@@ -69,6 +72,42 @@ public:
             trackbars[MAX_THRESH].val * ratio, kernel_size);
       src.copyTo(dst, detected_edges);
       // Using Canny's output as a mask, we display our result
+
+			if (apply_lines) {
+
+				// Edge detection
+		    // Canny(src, dst, 50, 200, 3);
+				detected_edges.copyTo(dst);
+		    // Copy edges to the images that will display the results in BGR
+		    cvtColor(dst, cdst, COLOR_GRAY2BGR);
+		    cdstP = cdst.clone();
+		    // Standard Hough Line Transform
+		    vector<Vec2f> lines; // will hold the results of the detection
+		    HoughLines(dst, lines, 1, CV_PI/180, 150, 0, 0 ); // runs the actual detection
+		    // Draw the lines
+		    for( size_t i = 0; i < lines.size(); i++ )
+		    {
+		        float rho = lines[i][0], theta = lines[i][1];
+		        Point pt1, pt2;
+		        double a = cos(theta), b = sin(theta);
+		        double x0 = a*rho, y0 = b*rho;
+		        pt1.x = cvRound(x0 + 1000*(-b));
+		        pt1.y = cvRound(y0 + 1000*(a));
+		        pt2.x = cvRound(x0 - 1000*(-b));
+		        pt2.y = cvRound(y0 - 1000*(a));
+		        line( cdst, pt1, pt2, Scalar(0,0,255), 3, CV_AA);
+		    }
+		    // Probabilistic Line Transform
+		    vector<Vec4i> linesP; // will hold the results of the detection
+		    HoughLinesP(dst, linesP, 1, CV_PI/180, 50, 50, 10 ); // runs the actual detection
+		    // Draw the lines
+		    for( size_t i = 0; i < linesP.size(); i++ )
+		    {
+		        Vec4i l = linesP[i];
+		        line( cdstP, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255), 3, LINE_AA);
+		    }
+				cdstP.copyTo(dst);
+			}
       if (apply_contuors) {
         cout << "applied" << endl;
         findContours(detected_edges, contours, hierarchy, RETR_TREE,
@@ -95,6 +134,7 @@ public:
       ///////////////////////////////////////////////////////////////////
     }
   }
+
 
   /// Colored mask edge detection
   /*//////////////////////////ImageManipulation////////////////////////

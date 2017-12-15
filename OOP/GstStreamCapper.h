@@ -60,6 +60,11 @@ private:
         "appsink drop=true sync=false";
 		cout << _capFullString << endl;
     cap.open(_capFullString.c_str());
+		if( cap.isOpened() )
+		cout << "Video " << //parser.get<string>("c") <<
+				": width=" << cap.get(CAP_PROP_FRAME_WIDTH) <<
+				", height=" << cap.get(CAP_PROP_FRAME_HEIGHT) <<
+				", nframes=" << cap.get(CAP_PROP_FRAME_COUNT) << endl;
   }
 
   void _assemble_trackbars() {
@@ -90,22 +95,32 @@ public:
     if (!cap.isOpened()) {
       printf("=ERR= can't create video capture\n");
     } else {
-      gstPrime();
       cout << _capFullString << endl;
     }
   }
 
-  GstStreamCapper(int portNum) {
+	GstStreamCapper(int portNum) {
     cout << "GstStreamReceiver created" << endl;
     setPort(portNum);
     _make_pipe();
     if (!cap.isOpened()) {
       printf("=ERR= can't create video capture\n");
     } else {
-      gstPrime();
       cout << _capFullString << endl;
     }
   }
+
+	GstStreamCapper(int portNum, int showLiveFeed) {
+	    cout << "GstStreamReceiver created" << endl;
+	    setPort(portNum);
+			showLive = showLiveFeed;
+	    _make_pipe();
+	    if (!cap.isOpened()) {
+	      printf("=ERR= can't create video capture\n");
+	    } else {
+	      cout << _capFullString << endl;
+	    }
+	  }
 
   ~GstStreamCapper() { cout << "Cleaning up GstStreamCapper" << endl; }
 
@@ -118,10 +133,18 @@ public:
   }
 
 	void removeFilter(GstAbsFilter *filter) {
+		bool removed = false;
 		for (int i = 0; i < currentFilterCount; i++) {
-			cout << "Not working yet...\n";
+			if (gstFilters[i] == filter) {
+				gstFilters[i] = nullptr;
+				removed = true;
+				currentFilterCount--;
+				cout << "Filter removed!\n";
+			}
+			if (removed) gstFilters[i] = gstFilters[i+1];
+			// cout << "Not working yet...\n";
 		}
-		// currentFilterCount--;
+		gstFilters[currentFilterCount] = nullptr;
 	}
 
   void setPort(int portNum) {
@@ -159,6 +182,8 @@ public:
     cout << ".run" << endl;
     namedWindow(windowName, WINDOW_NORMAL);
     _assemble_trackbars();
+		cout << "gstPrime()";
+		gstPrime();
 		// int framecount = 100;
 		// for (int count = 0; count < framecount; count++) {
 		char key = 0;
@@ -166,9 +191,10 @@ public:
 
       for (int i = 0; i < currentFilterCount; i++) {
         // cout << "Filter# : " << i << endl;
-        gstFilters[i]->filter(src, src_gray, dst);
+				// if (gstFilters[i] != nullptr)
+      	gstFilters[i]->filter(src, src_gray, dst);
 				dst.convertTo(src,CV_32FC1);
-        // dst.copyTo(src);
+        dst.copyTo(src);
         // cout << "End# : " << i << endl;
       }
 
