@@ -49,15 +49,18 @@ public:
     //								int max_slider,
     //								int max_capacity
     //}
-    trackbars[MIN_THRESH] = {"min Threshold", 15, 100};
-    trackbars[MAX_THRESH] = {"max Threshold", 40, 100};
+    trackbars[MIN_THRESH] = {"min Threshold", 15, 100, &onChange};
+    trackbars[MAX_THRESH] = {"max Threshold", 40, 100, &onChange};
     // trackbars[DISPERSION] = {"Dispersion", 20, 200};
     //////
   }
 
   ~GstEdgeDetect() { cout << "GstEdgeDetect removed!" << endl; }
 
-  static void onChange(int i, void *v) { ; }
+	static void onChange(int i, void* ptr) {
+		cout << "onChange: " << i << "\n";
+		// GstEdgeDetect *that = (GstEdgeDetect*)ptr;
+ }
 
   void filter(const Mat &src, const Mat &src_gray, Mat &dst) {
     if (on) {

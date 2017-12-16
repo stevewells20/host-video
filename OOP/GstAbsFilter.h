@@ -1,4 +1,4 @@
-#ifndef GSTABSFILTER_H					// avoid repeated expansion
+#ifndef GSTABSFILTER_H // avoid repeated expansion
 #define GSTABSFILTER_H
 
 #include "opencv2/imgcodecs.hpp"
@@ -13,37 +13,26 @@ using namespace cv;
 using namespace std;
 
 struct TrackbarStruct {
-	string name;
-	int val;
-	int cap;
+  string name;
+  int val;
+  int cap;
+  void (*onChange)(int, void *);
 };
 
 class GstAbsFilter {
 public:
+  int numTrackbars;
+  TrackbarStruct *trackbars;
+  bool on = true;
 
-	int numTrackbars;
-	TrackbarStruct *trackbars;
-	bool on = true;
+  GstAbsFilter() { cout << "GstAbsFilter created!" << endl; }
 
-	GstAbsFilter()
-	 {
-		cout << "GstAbsFilter created!" << endl;
-	}
+  virtual ~GstAbsFilter() {
+    delete[] trackbars;
+    cout << "GstAbsFilter removed!" << endl;
+  }
 
-	virtual ~GstAbsFilter() {
-		delete [] trackbars;
-		cout << "GstAbsFilter removed!" << endl;
-	}
-
-	static void onChange(int i, void* v) {
-		// cout << i << endl
-		;}
-
-
-virtual void filter(const Mat &src, const Mat &src_gray, Mat &dst)  = 0;
-
-
-
+  virtual void filter(const Mat &src, const Mat &src_gray, Mat &dst) = 0;
 };
 
 #endif

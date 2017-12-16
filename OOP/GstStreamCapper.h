@@ -74,7 +74,7 @@ private:
 											windowName,
                        &gstFilters[g]->trackbars[t].val,
                        gstFilters[g]->trackbars[t].cap,
-                       gstFilters[g]->onChange);
+                       gstFilters[g]->trackbars[t].onChange);
       }
     }
   }
@@ -195,6 +195,7 @@ public:
       	gstFilters[i]->filter(src, src_gray, dst);
 				dst.convertTo(src,CV_32FC1);
         dst.copyTo(src);
+				cvtColor(src, src_gray, CV_BGR2GRAY);
         // cout << "End# : " << i << endl;
       }
 
