@@ -27,16 +27,16 @@ int main(int argc, char **argv) {
   // GstEdgeDetect fEdge;	fEdge.apply_contuors = false; fEdge.apply_hull = false; fEdge.apply_lines = true;
 	// GstColorCorrect fColor;
 	// GstLaplaceEdgeDetect fLapEdge;
-	GstBRISKFeatures fBRISK;
-	// GstTest fTest;
+	// GstBRISKFeatures fBRISK;
+	GstTest fTest;
 
 	// gstr.addFilter(&fEdge);
 	// gstr.addFilter(&fFace);
 	// gstr.addFilter(&fCircle);
 	// gstr.addFilter(&fColor);
 	// gstr.addFilter(&fLapEdge);
-	gstr.addFilter(&fBRISK);
-	// gstr.addFilter(&fTest);
+	// gstr.addFilter(&fBRISK);
+	gstr.addFilter(&fTest);
 
 	gstr.run();
 	// gstr.removeFilter(&fColor);
