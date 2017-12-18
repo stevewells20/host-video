@@ -18,8 +18,7 @@ int main(int argc, char **argv) {
 
   GstStreamCapper gstr(5000,true);
 	gstr.showLive = true;
-	//
-	//
+
 	// gstr.resetCap();
 
 	// GstHoughCircle fCircle;

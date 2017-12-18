@@ -27,7 +27,7 @@ public:
 	vector<KeyPoint> keypoints;
 	Ptr<BRISK> ptrBrisk;
   bool on = true;
-  enum trackType { THRESH, LAST };
+  enum trackType { THRESH, OCTAVES, LAST };
 	static bool changeThresh;
 
   GstBRISKFeatures()
@@ -43,7 +43,8 @@ public:
     //								int max_capacity
     //}
 
-		trackbars[THRESH] = {"Threshold", 30, 100, &onChange};
+		trackbars[THRESH] = {"Threshold", 100, 255, &onChange};
+		trackbars[OCTAVES] = {"Octaves", 3, 9, &onChange};
     //////
   }
 
@@ -63,7 +64,7 @@ public:
 			signal changes on multithreaded processes (BRISK::create()) */
 			if (changeThresh) {
 				cout << "changeThresh : " << trackbars[THRESH].val << endl;
-				ptrBrisk = BRISK::create(trackbars[THRESH].val);
+				ptrBrisk = BRISK::create(trackbars[THRESH].val, trackbars[OCTAVES].val);
 				changeThresh = false;
 			}
 
@@ -74,11 +75,11 @@ public:
 
 			// Draw detected blobs as red circles.
 			// DrawMatchesFlags::DRAW_RICH_KEYPOINTS flag ensures the size of the circle corresponds to the size of blob
-			drawKeypoints( src_gray, keypoints, im_with_keypoints,
+			drawKeypoints( src, keypoints, dst,
 				Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
 
 			// Show blobs
-			im_with_keypoints.copyTo(dst);
+			// im_with_keypoints.copyTo(dst);
 
       /////////////////////////////////////////////////////////////////////
     }

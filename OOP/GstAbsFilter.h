@@ -32,7 +32,7 @@ public:
     cout << "GstAbsFilter removed!" << endl;
   }
 
-  virtual void filter(const Mat &src, const Mat &src_gray, Mat &dst) = 0;
+  virtual void filter(const Mat &src, const Mat &src_gray, Mat &dst, Rect2d &ROI) = 0;
 };
 
 #endif

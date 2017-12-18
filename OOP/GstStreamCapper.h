@@ -67,11 +67,12 @@ private:
 				", nframes=" << cap.get(CAP_PROP_FRAME_COUNT) << endl;
   }
 
-  void _assemble_trackbars() {
+	void _assemble_trackbars() {
     for (int g = 0; g < currentFilterCount; g++) {
       for (int t = 0; t < gstFilters[g]->numTrackbars; t++) {
-        createTrackbar(gstFilters[g]->trackbars[t].name,
-											windowName,
+				cout << "numTrackbars : " << gstFilters[g]->numTrackbars << endl;
+				cout << "Creating Trackbar: " << gstFilters[g]->trackbars[t].name << endl;
+        createTrackbar(gstFilters[g]->trackbars[t].name, windowName,
                        &gstFilters[g]->trackbars[t].val,
                        gstFilters[g]->trackbars[t].cap,
                        gstFilters[g]->trackbars[t].onChange);
@@ -79,15 +80,28 @@ private:
     }
   }
 
+	// void _assemble_get_ROI() {
+	// 	void* userData = nullptr;
+ // 		setMouseCallback( windowName, get_ROI, userData );
+	// }
+
 public:
   Codec codec = H264;
   Mat src, src_gray, dst;
   VideoWriter writer;
   VideoCapture cap;
+	Rect2d ROI;
+
   string windowName = "window1";
 	bool showLive = false;
 	bool grabVid = false;
 	string vidSaveLoc = "video.mp4";
+
+	void get_ROI() {
+		bool showCrosshair = true;
+		bool fromCenter = false;
+		ROI = selectROI(windowName, src, showCrosshair, fromCenter);
+	}
 
   GstStreamCapper() {
     cout << "GstStreamReceiver created" << endl;
@@ -176,15 +190,16 @@ public:
     cap >> src;
     cvtColor(src, src_gray, CV_BGR2GRAY);
     src.copyTo(dst);
+		ROI = Rect(); // x,y,cols,rows (x,y,w,h)
   }
 
   void run() {
     cout << ".run" << endl;
     namedWindow(windowName, WINDOW_NORMAL);
-    _assemble_trackbars();
+
 		cout << "gstPrime()";
 		gstPrime();
-		// int framecount = 100;
+		_assemble_trackbars();
 		// for (int count = 0; count < framecount; count++) {
 		char key = 0;
     while (key != 'q' && key != 'Q') {
@@ -192,9 +207,10 @@ public:
       for (int i = 0; i < currentFilterCount; i++) {
         // cout << "Filter# : " << i << endl;
 				// if (gstFilters[i] != nullptr)
-      	gstFilters[i]->filter(src, src_gray, dst);
+      	gstFilters[i]->filter(src, src_gray, dst, ROI);
 				dst.convertTo(src,CV_32FC1);
         dst.copyTo(src);
+				// if (src.type() == CV_GR
 				cvtColor(src, src_gray, CV_BGR2GRAY);
         // cout << "End# : " << i << endl;
       }
@@ -202,10 +218,14 @@ public:
       imshow(windowName, dst);
 
       cap >> src;
-      cvtColor(src, src_gray, CV_BGR2GRAY);
-      src.copyTo(dst);
+      // cvtColor(src, src_gray, CV_BGR2GRAY);
+      // src.copyTo(dst);
+
+
+			///// User interupts /////
 			if (key == 's') { snapshot(); key = 0; }
 			// if (key == 'v') { saveSrcVideo(); key = 0; }
+			if (key == 'r') { get_ROI( ); key = 0; }
       key = waitKey(20);
     }
   }
