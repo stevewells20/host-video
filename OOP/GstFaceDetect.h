@@ -65,7 +65,7 @@ public:
 
   static void onChange(int i, void *v) { ; }
 
-void filter(const Mat &src, const Mat &src_gray, Mat &dst) {
+	void filter(const Mat &src, const Mat &src_gray, Mat &dst, Rect2d &ROI) {
 	if (on) {
       ////////////////////////////Image manipulation//////////////////////////
 			// cout << "GstFaceDetect.filter()" << endl;

@@ -5,7 +5,7 @@
 #include "GstColorCorrect.h"
 #include "GstLaplaceEdgeDetect.h"
 #include "GstTest.h"
-#include "GstBRISKFeatures.h"
+#include "GstBRISKDetect.h"
 
 #include <time.h>
 
@@ -14,7 +14,7 @@
 
 int main(int argc, char **argv) {
 
-	// cout << getBuildInformation() << endl << endl;
+	cout << getBuildInformation() << endl << endl;
 
   GstStreamCapper gstr(5000,true);
 	gstr.showLive = true;
@@ -23,19 +23,20 @@ int main(int argc, char **argv) {
 
 	// GstHoughCircle fCircle;
 	// GstFaceDetect fFace;
-  // GstEdgeDetect fEdge;	fEdge.apply_contuors = false; fEdge.apply_hull = false; fEdge.apply_lines = true;
+  // GstEdgeDetect fEdge;	fEdge.apply_contuors = false; fEdge.apply_hull = false; fEdge.apply_lines = false;
 	// GstColorCorrect fColor;
 	// GstLaplaceEdgeDetect fLapEdge;
 	// GstBRISKFeatures fBRISK;
-	GstTest fTest;
+	// GstBRISKDetect fBRISK;
+	// GstTest fTest;
 
+	// gstr.addFilter(&fCircle);
 	// gstr.addFilter(&fEdge);
 	// gstr.addFilter(&fFace);
-	// gstr.addFilter(&fCircle);
 	// gstr.addFilter(&fColor);
 	// gstr.addFilter(&fLapEdge);
 	// gstr.addFilter(&fBRISK);
-	gstr.addFilter(&fTest);
+	// gstr.addFilter(&fTest);
 
 	gstr.run();
 	// gstr.removeFilter(&fColor);

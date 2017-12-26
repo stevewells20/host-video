@@ -218,14 +218,14 @@ public:
       imshow(windowName, dst);
 
       cap >> src;
-      // cvtColor(src, src_gray, CV_BGR2GRAY);
-      // src.copyTo(dst);
+      cvtColor(src, src_gray, CV_BGR2GRAY);
+      src.copyTo(dst);
 
 
 			///// User interupts /////
 			if (key == 's') { snapshot(); key = 0; }
 			// if (key == 'v') { saveSrcVideo(); key = 0; }
-			if (key == 'r') { get_ROI( ); key = 0; }
+			if (key == 'r') { get_ROI(); key = 0; }
       key = waitKey(20);
     }
   }

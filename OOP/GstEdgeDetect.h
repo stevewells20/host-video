@@ -49,8 +49,8 @@ public:
     //								int max_slider,
     //								int max_capacity
     //}
-    trackbars[MIN_THRESH] = {"min Threshold", 15, 100, &onChange};
-    trackbars[MAX_THRESH] = {"max Threshold", 40, 100, &onChange};
+    trackbars[MIN_THRESH] = {"min Threshold", 15, 255, &onChange};
+    trackbars[MAX_THRESH] = {"max Threshold", 40, 255, &onChange};
     // trackbars[DISPERSION] = {"Dispersion", 20, 200};
     //////
   }
@@ -62,14 +62,14 @@ public:
 		// GstEdgeDetect *that = (GstEdgeDetect*)ptr;
  }
 
-  void filter(const Mat &src, const Mat &src_gray, Mat &dst) {
+ void filter(const Mat &src, const Mat &src_gray, Mat &dst, Rect2d &ROI) {
     if (on) {
       ///////////////////////ImageManipulation//////////////////////////
       // cout << "GstEdgeDetect.filter()" << endl;
       // Reduce noise with a kernel 3x3
       blur(src_gray, detected_edges, Size(kernel_size, kernel_size));
       dst = Scalar::all(0);
-      // Canny detector
+      cout << trackbars[MAX_THRESH].val << endl;
       Canny(detected_edges, detected_edges, trackbars[MIN_THRESH].val,
             // trackbars[MIN_THRESH].val * ratio, //swapped in next line
             trackbars[MAX_THRESH].val * ratio, kernel_size);

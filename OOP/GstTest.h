@@ -7,27 +7,34 @@
 #include <opencv2/objdetect.hpp>
 #include <opencv2/opencv.hpp>
 #include <opencv2/features2d.hpp>
-#include <opencv2/xfeatures2d.hpp>
 #include <stdio.h>
 #include <string>
-#include <vector> // std::vector
+#include <vector>
+#include <opencv2/tracking.hpp>
+// #include <opencv2/xfeatures2d.hpp>
 
 #include "GstAbsFilter.h"
 
 
 
 using namespace cv;
-using namespace cv::xfeatures2d;
+// using namespace cv::tracking;
 using namespace std;
 
 class GstTest : public GstAbsFilter {
 
 public:
   bool on = true;
+  enum trackType { THRESH, OCTAVES, LAST };
+	static bool callBoolck;
 
-	enum trackType { THRESH, LAST };
+	Mat descripterA, descripterB, src_gray_ROI;
+////
+	MultiTracker tracker;
+////
 
   GstTest()
+
 		{
     GstAbsFilter::numTrackbars = LAST;
     GstAbsFilter::trackbars = new TrackbarStruct[LAST];
@@ -40,6 +47,7 @@ public:
     //}
 
 		trackbars[THRESH] = {"Threshold", 100, 200, &onChange};
+		trackbars[OCTAVES] = {"Octaves", 3, 9, &onChange};
     //////
   }
 
@@ -49,7 +57,7 @@ public:
 	static void onChange(int i, void* ptr) {
 		// cout << "onChange: " << i << "\n";
 		GstTest *that = (GstTest*)ptr;
-		that->flipBrisk=true;
+		that->callBoolck=true;
  }
 
  // static void selectBox()
@@ -60,53 +68,24 @@ public:
 
 			/////////////////////////ImageManipulation/////////////////////////
 
-			if (flipBrisk) {
-				cout << "fliter : flipBrisk : " << flipBrisk << endl;
-				ptrBrisk = BRISK::create(trackbars[THRESH].val, trackbars[OCTAVES].val);
-				flipBrisk = false;
+			if (callBoolck) {
+				cout << "fliter : callBoolck : " << callBoolck << endl;
+				// selection = Rect2d(ROI);
+				callBoolck = false;
 			}
-			// ptrBrisk = BRISK::create();
-
-			// Detect blobs.
-			cout <<  ROI << endl;
-			// if(src_gray.rows==0 || src_gray.cols==0) return;
+			// cout <<  ROI << endl;
 
 			src_gray_ROI  = src_gray(ROI);
 
-			ptrBrisk->detect(src_gray_ROI, keypointsA);
-			// ptrBrisk->compute(src_gray_ROI, keypointsA, descripterA);
-			// if (keypointsB.size() > 0) matcher.match(descripterA, descripterB, matches);
-			// Add padding for uncropped translation
-			for (int i = 0; i < keypointsA.size(); i++) {
-				keypointsA[i].pt.x += ROI.x ;
-				keypointsA[i].pt.y += ROI.y ;
-			}
-			// detector.detect( src_gray, keypointsA);
 
-			// Draw detected blobs as red circles.
-			// DrawMatchesFlags::DRAW_RICH_KEYPOINTS flag ensures the size of the circle corresponds to the size of blob
-
-			drawKeypoints( src, keypointsA, dst,
-				Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
-
-
-			// if (keypointsB.size() > 0) drawKeypoints( dst, keypointsB, dst,
-			// 	Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
-				//DrawMatchesFlags:: {DRAW_RICH_KEYPOINTS,NOT_DRAW_SINGLE_POINTS,DRAW_OVER_OUTIMG,DEFAULT}
-			//  &&  && matches.size() >  0)
-
-				// cv::drawMatches( src_gray_ROI, keypointsA, src_gray_ROI, keypointsB,
-			  //                    matches, dst, cv::Scalar::all(-1), cv::Scalar::all(-1),
-			  //                    vector<char>(),cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
 
 			rectangle(dst, ROI, Scalar(0,0,255));
-			// src_gray_ROI.copyTo(dst);
-			// cout << "DONE\n";
+
       /////////////////////////////////////////////////////////////////////
 
     }
   }
 };
-bool GstTest::flipBrisk = false;
+bool GstTest::callBoolck = false;
 
 #endif
