@@ -55,6 +55,8 @@ Point2f computeIntersect(Vec4i a, Vec4i b)
 	}
 }
 
+void onChange(int i, void* v) {;}
+
 int main(int, char**)
 {
 	Mat src, bw, dst, quad, transmtx;
@@ -66,7 +68,19 @@ int main(int, char**)
 	string win1 = "win1";
 	string win2 = "win2";
 	namedWindow(win1, CV_WINDOW_NORMAL);
-	namedWindow(win2, CV_WINDOW_NORMAL);
+	// namedWindow(win2, CV_WINDOW_NORMAL);
+
+	int rho = 1; // increase rho == increase tolerance of line
+	int theta = 1;
+	int thresh = 70;
+	int minLength = 30;
+	int maxGap = 10;
+
+	createTrackbar("rho", win1, &rho, 199, onChange);
+	createTrackbar("theta", win1, &theta, 179, onChange);
+	createTrackbar("thresh", win1, &thresh, 140, onChange);
+	createTrackbar("minLength", win1, &minLength, 60, onChange);
+	createTrackbar("maxGap", win1, &maxGap, 20, onChange);
 
 	for(;;)	{
 		cap >> src;
@@ -82,10 +96,10 @@ int main(int, char**)
 
 		vector<Vec4i> lines;
 
-		HoughLinesP(bw, lines, 1, CV_PI/180, 70, 30, 10);
+		HoughLinesP(bw, lines, ((rho+1)/100.0), CV_PI/180*(theta+1),
+								thresh, (minLength), (maxGap));
 
 		// Expand the lines
-
 		for (int i = 0; i < lines.size(); i++)
 		{
 		 Vec4i v = lines[i];
@@ -106,49 +120,52 @@ int main(int, char**)
 		 }
 		}
 		vector<Point2f> approx;
-		approxPolyDP(Mat(corners), approx, arcLength(Mat(corners), true) * 0.02, true);
 
-		if (approx.size() != 4)
-		{
-		 cout << "approx.size == " << approx.size() << endl;
-		}
+		if (corners.size() >= 4) {
+			approxPolyDP(Mat(corners), approx, arcLength(Mat(corners), true) * 0.02, true);
 
-		// Get mass center
-		for (int i = 0; i < corners.size(); i++) center += corners[i];
-		center *= (1. / corners.size());
+			// if (approx.size() != 4)
+			// {
+			//  cout << "approx.size == " << approx.size() << endl;
+			// }
 
-		sortCorners(corners, center);
-		if (corners.size() == 0) cout << "Number of corners is 0... skipping" << endl;
+			// Get mass center
+			for (int i = 0; i < corners.size(); i++) center += corners[i];
+			center *= (1. / corners.size());
 
-		// Draw lines
-		for (int i = 0; i < lines.size(); i++)
-		{
-		 Vec4i v = lines[i];
-		 line(dst, Point(v[0], v[1]), Point(v[2], v[3]), CV_RGB(0,255,0));
-		}
+			sortCorners(corners, center);
+			if (corners.size() == 0) cout << "Number of corners is 0... skipping" << endl;
 
-		// Draw corner points
-		circle(dst, corners[0], 3, CV_RGB(255,0,0), 2);
-		circle(dst, corners[1], 3, CV_RGB(0,255,0), 2);
-		circle(dst, corners[2], 3, CV_RGB(0,0,255), 2);
-		circle(dst, corners[3], 3, CV_RGB(255,255,255), 2);
-		//
-		// Draw mass center
-		circle(dst, center, 3, CV_RGB(255,255,0), 2);
+			// Draw lines
+			for (int i = 0; i < lines.size(); i++)
+			{
+			 Vec4i v = lines[i];
+			 line(dst, Point(v[0], v[1]), Point(v[2], v[3]), CV_RGB(0,255,0));
+			}
 
-		quad = Mat::zeros(300, 220, CV_8UC3);
+			// Draw corner points
+			circle(dst, corners[0], 3, CV_RGB(255,0,0), 2);
+			circle(dst, corners[1], 3, CV_RGB(0,255,0), 2);
+			circle(dst, corners[2], 3, CV_RGB(0,0,255), 2);
+			circle(dst, corners[3], 3, CV_RGB(255,255,255), 2);
+			//
+			// Draw mass center
+			circle(dst, center, 3, CV_RGB(255,255,0), 2);
 
-		vector<Point2f> quad_pts;
-		quad_pts.push_back(Point2f(0, 0));
-		quad_pts.push_back(Point2f(quad.cols, 0));
-		quad_pts.push_back(Point2f(quad.cols, quad.rows));
-		quad_pts.push_back(Point2f(0, quad.rows));
+			quad = Mat::zeros(300, 220, CV_8UC3);
+
+			vector<Point2f> quad_pts;
+			quad_pts.push_back(Point2f(0, 0));
+			quad_pts.push_back(Point2f(quad.cols, 0));
+			quad_pts.push_back(Point2f(quad.cols, quad.rows));
+			quad_pts.push_back(Point2f(0, quad.rows));
 
 		// transmtx = getPerspectiveTransform(corners, quad_pts);
 		// warpPerspective(src, quad, transmtx, quad.size());
 
+		}
 		imshow(win1, dst);
-		imshow(win2, quad);
+		// imshow(win2, quad);
 
     if(waitKey(30) == 'q') break;
 		}
