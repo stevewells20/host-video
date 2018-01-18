@@ -402,7 +402,6 @@ void onTrackbar(int, void*) {
   // Final result
   cv::imshow(windowName, res);
 	cv::imshow("test", predTest);
-
 }
 
 ///////////////////

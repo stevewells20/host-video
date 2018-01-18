@@ -16,8 +16,8 @@ int main(int argc, char **argv) {
 
 	cout << getBuildInformation() << endl << endl;
 
-  GstStreamCapper gstr(5000,true);
-	gstr.showLive = true;
+  GstStreamCapper gstr(5000,false);
+	// gstr.showLive = false;
 
 	// gstr.resetCap();
 

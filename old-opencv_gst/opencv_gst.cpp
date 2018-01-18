@@ -326,7 +326,7 @@ int main(int argc, char **argv) {
   cvtColor(src, src_gray, CV_BGR2GRAY);
 
   /// Create a window
-  namedWindow(window_name, CV_WINDOW_AUTOSIZE);
+  namedWindow(window_name, CV_WINDOW_NORMAL);
 
   ////////////////FILTERS/////////////////
   //// Uncomment one of these to have it run! (Multiple filters wont work
@@ -334,8 +334,8 @@ int main(int argc, char **argv) {
   //// Remember to save afterwards with CTRL-o, then Enter ////
   // canny();
   // h_circles();
-  // p_hog();
-  face_d();
+   p_hog();
+  // face_d();
   ////////////////////////////////////////////////////////////////////////////////////////////////////
 
   /// Wait until user exit program by pressing a key

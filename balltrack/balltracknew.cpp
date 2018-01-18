@@ -187,7 +187,7 @@ int main()
 
     char ch = 0;
 
-    cv::namedWindow(windowName, 1);
+    cv::namedWindow(windowName, WINDOW_NORMAL);
 
 		cv::setMouseCallback(windowName, clickAndDrag_Rectangle, &frmHsv);
 
