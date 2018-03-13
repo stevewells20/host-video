@@ -17,8 +17,13 @@ int main(int argc, char **argv) {
 
 	cout << getBuildInformation() << endl << endl;
 
+<<<<<<< HEAD
 	GstStreamCapper gstr(5000,true);
 	gstr.showLive = true;
+=======
+  GstStreamCapper gstr(5000,false);
+	// gstr.showLive = false;
+>>>>>>> 9201281058ec4b8d816f1358dcd9d84884cd011f
 
 	// gstr.resetCap();
 

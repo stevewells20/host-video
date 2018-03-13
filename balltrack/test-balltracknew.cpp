@@ -137,6 +137,8 @@ int main()
     kf.processNoiseCov.at<float>(21) = 5.0f;
     kf.processNoiseCov.at<float>(28) = 1e-2;
     kf.processNoiseCov.at<float>(35) = 1e-2;
+/// Play with the Process Noise Covariance Matrix:
+  // Try adding in some actual Covariance to it, make noise variables interdependent
 
     // Measures Noise Covariance Matrix R
     cv::setIdentity(kf.measurementNoiseCov, cv::Scalar(1e-1));
@@ -348,12 +350,25 @@ void onTrackbar(int, void*) {
   }
   else
   {
+
+    /// Now we locate the object with closest approx centroid to last known positiont
+    float r_min = 0;
+    int closest = 0;
+    for (int i = 0; i < ballsBox.size(); i++) {
+      float r_test = pow(ballsBox[i].x - state.at<float>(0), 2) + pow(ballsBox[i].y - state.at<float>(1), 2); //Dx^2 + Dy^2
+      if (i == 0 || r_test < r_min) {
+        closest = i;
+      }
+      // else we dont care, continue
+    } // Now closet should hold the index of the closest ballsBox element center
+
+    /////////////////////////////////////////////////////////////////////////////////////////
       notFoundCount = 0;
 
-      meas.at<float>(0) = ballsBox[0].x + ballsBox[0].width / 2;
-      meas.at<float>(1) = ballsBox[0].y + ballsBox[0].height / 2;
-      meas.at<float>(2) = (float)ballsBox[0].width;
-      meas.at<float>(3) = (float)ballsBox[0].height;
+      meas.at<float>(0) = ballsBox[closest].x + ballsBox[closest].width / 2;
+      meas.at<float>(1) = ballsBox[closest].y + ballsBox[closest].height / 2;
+      meas.at<float>(2) = (float)ballsBox[closest].width;
+      meas.at<float>(3) = (float)ballsBox[closest].height;
 
       if (!found) // First detection!
       {
@@ -387,7 +402,6 @@ void onTrackbar(int, void*) {
   // Final result
   cv::imshow(windowName, res);
 	cv::imshow("test", predTest);
-
 }
 
 ///////////////////

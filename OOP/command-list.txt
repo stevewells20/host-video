@@ -1,0 +1,1 @@
+clear; g++ -fopenmp -D_GLIBCXX_PARALLEL -Ofast -O3 -march=native -std=c++11 main.cpp -o main `pkg-config --cflags --libs opencv gstreamer-1.0` && ./main
