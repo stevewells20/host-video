@@ -208,10 +208,15 @@ public:
         // cout << "Filter# : " << i << endl;
 				// if (gstFilters[i] != nullptr)
       	gstFilters[i]->filter(src, src_gray, dst, ROI);
-				dst.convertTo(src,CV_32FC1);
-        dst.copyTo(src);
+				if (dst.type() != src.type() ) {
+					cvtColor(dst, src, CV_GRAY2RGB);
+					src.copyTo(src_gray);
+				} else {
+					dst.copyTo(src);
+					cvtColor(src, src_gray, CV_BGR2GRAY);
+				}
+        //dst.copyTo(src);
 				// if (src.type() == CV_GR
-				cvtColor(src, src_gray, CV_BGR2GRAY);
         // cout << "End# : " << i << endl;
       }
 

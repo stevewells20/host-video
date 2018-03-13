@@ -6,6 +6,7 @@
 #include "GstLaplaceEdgeDetect.h"
 #include "GstTest.h"
 #include "GstBRISKDetect.h"
+#include "GstMotionDetect.h"
 
 #include <time.h>
 
@@ -16,20 +17,22 @@ int main(int argc, char **argv) {
 
 	cout << getBuildInformation() << endl << endl;
 
-  GstStreamCapper gstr(5000,true);
+	GstStreamCapper gstr(5000,true);
 	gstr.showLive = true;
 
 	// gstr.resetCap();
 
 	// GstHoughCircle fCircle;
 	// GstFaceDetect fFace;
-  // GstEdgeDetect fEdge;	fEdge.apply_contuors = false; fEdge.apply_hull = false; fEdge.apply_lines = false;
+	// GstEdgeDetect fEdge;	fEdge.apply_contuors = false; fEdge.apply_hull = false; fEdge.apply_lines = false;
 	// GstColorCorrect fColor;
 	// GstLaplaceEdgeDetect fLapEdge;
 	// GstBRISKFeatures fBRISK;
 	// GstBRISKDetect fBRISK;
 	// GstTest fTest;
+	GstMotionDetect fMotion;
 
+	gstr.addFilter(&fMotion);
 	// gstr.addFilter(&fCircle);
 	// gstr.addFilter(&fEdge);
 	// gstr.addFilter(&fFace);

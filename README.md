@@ -13,6 +13,7 @@ What things you need to install the software and how to install them
 ```
 Host:
 	OpenCV 3.3.1 (and its deps)
+		You can use the install script from master for help setting up OpenCV the way we did
 
 Jetson:
 	Jetson TK1
@@ -76,7 +77,7 @@ Please read [CONTRIBUTING.md]()
 
 ## Authors
 
-* **Steven Wells** - *Evil Lackey* 
+* **Steven Wells** - *Evil Lackey*
 * **Jeramie Chew** - *Computer Scientist*
 
 See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
@@ -88,5 +89,5 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 ## Acknowledgments
 
 * Walter Lucetti (https://github.com/Myzhar/simple-opencv-kalman-tracker)
-* 
-* 
+*
+*
