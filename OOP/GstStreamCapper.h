@@ -38,24 +38,27 @@ private:
 
   void _make_pipe() {
     cout << "._make_pipe" << endl;
-    _capFullString =
+    if (localSource) _capFullString +=
+        "v4l2src ! ";
+    else _capFullString +=
         "udpsrc port=" + port + " caps=application/x-rtp ! " +
+        "h264parse !" +
         codecStore[codec][DEPAY] + " ! " +
 				codecStore[codec][DECODE];
-    if (showLive) _capFullString += " ! "
+    if (showLive) _capFullString +=
 		    "tee name=pSplit ! "
         "queue ! "
         "videoconvert ! "
         "autovideosink sync=" + codecStore[codec][SYNC] + " pSplit. ! "
-        "queue";
-		// if (grabVid) _capFullString += " ! "
+        "queue ! ";
+		// if (grabVid) _capFullString +=
 		// 		"tee name=vSplit ! "
 		// 		"queue ! "
 		// 		// "h264parse ! "
 		// 		"mpegtsmux ! "
 		// 		"filesink location=" + vidSaveLoc + " vSplit. ! "
 		// 		"queue";
-    _capFullString += " ! "
+    _capFullString +=
 		    "videoconvert ! "
         "appsink drop=true sync=false";
 		cout << _capFullString << endl;
@@ -94,6 +97,7 @@ public:
 
   string windowName = "window1";
 	bool showLive = false;
+  bool localSource = false;
 	bool grabVid = false;
 	string vidSaveLoc = "video.mp4";
 
@@ -105,35 +109,31 @@ public:
 
   GstStreamCapper() {
     cout << "GstStreamReceiver created" << endl;
-    _make_pipe();
-    if (!cap.isOpened()) {
-      printf("=ERR= can't create video capture\n");
-    } else {
-      cout << _capFullString << endl;
-    }
+    //_make_pipe();
+
   }
 
 	GstStreamCapper(int portNum) {
     cout << "GstStreamReceiver created" << endl;
     setPort(portNum);
-    _make_pipe();
-    if (!cap.isOpened()) {
-      printf("=ERR= can't create video capture\n");
-    } else {
-      cout << _capFullString << endl;
-    }
+    // _make_pipe();
+    // if (!cap.isOpened()) {
+    //   printf("=ERR= can't create video capture\n");
+    // } else {
+    //   cout << _capFullString << endl;
+    // }
   }
 
 	GstStreamCapper(int portNum, int showLiveFeed) {
 	    cout << "GstStreamReceiver created" << endl;
 	    setPort(portNum);
 			showLive = showLiveFeed;
-	    _make_pipe();
-	    if (!cap.isOpened()) {
-	      printf("=ERR= can't create video capture\n");
-	    } else {
-	      cout << _capFullString << endl;
-	    }
+	    // _make_pipe();
+	    // if (!cap.isOpened()) {
+	    //   printf("=ERR= can't create video capture\n");
+	    // } else {
+	    //   cout << _capFullString << endl;
+	    // }
 	  }
 
   ~GstStreamCapper() { cout << "Cleaning up GstStreamCapper" << endl; }
@@ -186,6 +186,7 @@ public:
   }
 
   void gstPrime() {
+    _make_pipe();
     cout << ".gstPrimed" << endl;
     cap >> src;
     cvtColor(src, src_gray, CV_BGR2GRAY);

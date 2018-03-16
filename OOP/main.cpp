@@ -14,18 +14,14 @@
 
 
 int main(int argc, char **argv) {
-
+	int portNum = 5000;
+	if (argc > 1) portNum = atoi(argv[1]);
 	cout << getBuildInformation() << endl << endl;
 
-<<<<<<< HEAD
-	GstStreamCapper gstr(5000,true);
+	GstStreamCapper gstr(portNum,true);
 	gstr.showLive = true;
-=======
-  GstStreamCapper gstr(5000,false);
-	// gstr.showLive = false;
->>>>>>> 9201281058ec4b8d816f1358dcd9d84884cd011f
-
-	// gstr.resetCap();
+	gstr.localSource = true;
+	//gstr.resetCap();
 
 	// GstHoughCircle fCircle;
 	// GstFaceDetect fFace;
