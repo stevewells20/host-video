@@ -3,6 +3,7 @@
 #include "GstFaceDetect.h"
 #include "GstEdgeDetect.h"
 #include "GstColorCorrect.h"
+#include "GstColorCorrect2.h"
 #include "GstLaplaceEdgeDetect.h"
 #include "GstTest.h"
 #include "GstBRISKDetect.h"
@@ -16,17 +17,19 @@
 int main(int argc, char **argv) {
 	int portNum = 5000;
 	if (argc > 1) portNum = atoi(argv[1]);
-	cout << getBuildInformation() << endl << endl;
+	//cout << getBuildInformation() << endl << endl;
 
 	GstStreamCapper gstr(portNum,true);
-	gstr.showLive = true;
-	gstr.localSource = true;
-	//gstr.resetCap();
+	// gstr.showLive = true;
+	gstr.sourceType = VID; //UDP, CAM, VID
+	gstr.videoFileLocation = "/usr/share/OpenCV/samples/data/data/vtest.avi";
+	gstr.codecType = NONE; //
+	// gstr.resetCap();
 
 	// GstHoughCircle fCircle;
 	// GstFaceDetect fFace;
 	// GstEdgeDetect fEdge;	fEdge.apply_contuors = false; fEdge.apply_hull = false; fEdge.apply_lines = false;
-	// GstColorCorrect fColor;
+	// GstColorCorrect2 fColor;
 	// GstLaplaceEdgeDetect fLapEdge;
 	// GstBRISKFeatures fBRISK;
 	// GstBRISKDetect fBRISK;

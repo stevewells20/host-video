@@ -10,6 +10,7 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <math.h>
 
 #include "GstAbsFilter.h"
 
@@ -18,123 +19,73 @@ using namespace std;
 
 class GstMotionDetect : public GstAbsFilter {
 private:
-  Mat detected_edges;
-  int edgeThresh = 1;
-  int lowThreshold;
-  int const max_lowThreshold = 100;
-  int ratio = 3;
-	Mat mask;
-	Scalar maskSum;
+	Mat fgMaskMOG2;
+  Ptr<BackgroundSubtractorMOG2> pMOG2; // MOG2 background subtractor
 
 public:
   bool on = true;
-  bool apply_gaussian = true;
-  bool apply_blur = false;
-	Mat smoothed;
-	Mat laplace;
-	Mat t1, t2;
 	int frameCount = 0;
 	bool isFirstFrame = true;
-	bool maskUpdatePending = false;
+  double maskSum;
 
-  enum trackType { SENSITIVITY, LAST };
+  enum trackType { HISTORY, THRESHOLD, SHADOWS, BACK_RATIO, COMPLEXITY_REDUCE, MOVE_THRESH, LAST };
 
   GstMotionDetect()
 	 {
+    pMOG2 = createBackgroundSubtractorMOG2(); //MOG2 approach
+
     GstAbsFilter::numTrackbars = LAST;
     GstAbsFilter::trackbars = new TrackbarStruct[LAST];
 
     cout << "GstMotionDetect created!" << endl;
     ///////
-    // trackbars[x] = {string "Name_of_variable",
-    //								int min_slider,
-    //								int max_slider,
-    //								int max_capacity
-    //}
-    trackbars[SENSITIVITY] = {"Sensitivity", 128, 255, &onChange};
-    // trackbars[MAX_THRESH] = {"max Threshold", 40, 100};
-    // trackbars[DISPERSION] = {"Dispersion", 20, 200};
+    trackbars[HISTORY] = {"HISTORY", 110, 999};
+    trackbars[THRESHOLD] = {"THRESHOLD", 32, 64};
+    trackbars[SHADOWS] = {"SHADOWS", 0, 1};
+    trackbars[BACK_RATIO] = {"BACK_RATIO", 127, 255};
+		trackbars[COMPLEXITY_REDUCE] = {"COMPLEXITY_REDUCE", 55, 255};
+		trackbars[MOVE_THRESH] = {"MOVE_THRESH", 5, 100};
     //////
   }
 
+
   ~GstMotionDetect() { cout << "GstMotionDetect removed!" << endl; }
 
-  static void onChange(int i, void *ptr) { ;
-		// GstMotionDetect *that = (GstMotionDetect*)ptr;
-		// that->maskUpdatePending = true;
-		// cout << "HERE!!" << endl;
-	}
- //  void updateMask() {
- //  mask = Mat( mask.size(), CV_64FC3, Scalar(trackbars[SENSITIVITY].val,trackbars[SENSITIVITY].val,trackbars[SENSITIVITY].val) );
- //  maskSum = sum(sum(mask));
- // }
+  static void onChange(int i, void *ptr) { ; }
 
-	void diffImg(const Mat t0, const Mat t1, const Mat t2, Mat dst) {
-		Mat d1, d2;
-		absdiff(t2, t1, d1);
-		absdiff(t1, t0, d2);
-		bitwise_or(d1, d2, dst);
-	}
 
 	void filter(const Mat &src, const Mat &src_gray, Mat &dst, Rect2d &ROI) {
     if (on) {
       ///////////////////////ImageManipulation//////////////////////////
-
-			if (frameCount < 2) {
-				t1.copyTo(t2);
-				src.copyTo(t1);
-				frameCount++;
-				mask = Mat( dst.size(), CV_64FC3, Scalar(trackbars[SENSITIVITY].val,trackbars[SENSITIVITY].val,trackbars[SENSITIVITY].val) );
-				maskSum = sum(sum(mask));
-				return;
+      if (isFirstFrame) {
+				Mat mask = Mat( dst.size(), CV_64FC3, Scalar(255,255,255) );
+				maskSum = sum(mask)[0];
+				isFirstFrame = false;
 			}
-			// if (maskUpdatePending) {
-			// 	updateMask();
-			// 	maskUpdatePending = false;
-			// }
 
-			diffImg( src, t1, t2, dst );
+      if (pMOG2->getHistory() != trackbars[HISTORY].val)
+        pMOG2->setHistory(trackbars[HISTORY].val);
+      if (pMOG2->getVarThreshold() != trackbars[THRESHOLD].val)
+        pMOG2->setVarThreshold(trackbars[THRESHOLD].val);
+      if (pMOG2->getDetectShadows() != bool(trackbars[SHADOWS].val))
+        pMOG2->setDetectShadows(bool(trackbars[SHADOWS].val));
+      if (round(pMOG2->getBackgroundRatio()) != trackbars[BACK_RATIO].val)
+        pMOG2->setBackgroundRatio(double(trackbars[BACK_RATIO].val/100.0));
+      if (round(pMOG2->getComplexityReductionThreshold()) != trackbars[COMPLEXITY_REDUCE].val)
+        pMOG2->setComplexityReductionThreshold(double(trackbars[COMPLEXITY_REDUCE].val/100.0));
 
-			Scalar dstSum = sum(sum(dst));
-			//cout << "Image: " << dstSum << endl;
+      pMOG2->apply(src, fgMaskMOG2);
+      fgMaskMOG2.copyTo(dst);
 
-			double percent;
-			//for (int i = 0; i < 3; i++) {
-			percent =  (dstSum[0] / maskSum[0]) * 100;
-			//}
-			cout << "Percentage: " << percent << endl;
-			stringstream stream;
-			stream << "Percentage: " << float(percent) << endl;
+      double dstSum = sum(dst)[0];
+			double scale = dstSum/maskSum;
+      stringstream stream;
+			stream << "Percentage: " << scale << endl;
 			putText(dst, stream.str(),  cvPoint(30,30), FONT_HERSHEY_COMPLEX_SMALL, 1.8, cvScalar(200,200,250), 1, CV_AA);
+			if (scale >= trackbars[MOVE_THRESH].val/100.0 )
+				putText(dst, "MOVEMENT DETECTED",  cvPoint(30,60), FONT_HERSHEY_COMPLEX_SMALL, 3.0, cvScalar(255,0,0), 1, CV_AA);
 
-			if (percent > 3.0) {
-				putText(dst, "!!! MOVEMENT DETECTED !!!",  cvPoint(100,100), FONT_HERSHEY_COMPLEX_SMALL, 3.4, cvScalar(0,0,255), 1, CV_AA);
-			}
 
-			t1.copyTo(t2);
-			src.copyTo(t1);
-
-			// if (isFirstFrame) {
-			// 	src.copyTo(last);
-			// 	src.copyTo(dst);
-			// 	isFirstFrame = false;
-			// 	return;
-			// }
-			// subtract(src, last, dst);
-			// src.copyTo(last);
-
-			/*
-      int ksize = (trackbars[SIGMA].val*4)|1;
-			if(apply_gaussian)
-					GaussianBlur(src, smoothed, Size(ksize, ksize), trackbars[SIGMA].val, trackbars[SIGMA].val);
-			else if(apply_blur)
-					blur(src, smoothed, Size(ksize, ksize));
-			else
-					medianBlur(src, smoothed, ksize);
-
-			Laplacian(smoothed, laplace, CV_16S, 5);
-			convertScaleAbs(laplace, dst, (trackbars[SIGMA].val+1)*0.25);
-*/
       ///////////////////////////////////////////////////////////////////
     }
   }

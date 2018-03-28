@@ -14,7 +14,8 @@
 using namespace cv;
 using namespace std;
 
-enum Codec { H264, VP8, RAW };        // row
+enum SourceType {UDP, VID, CAM};
+enum CodecType { H265, H264, VP8, RAW, NONE };        // row
 enum Element { DEPAY, DECODE, SYNC }; // col
 
 class GstStreamCapper {
@@ -29,59 +30,10 @@ private:
       {"rtprawdepay", "", "true"} // RAW
   };
 
-  string port = "5000";
-  string _capFullString;
-
   // typedef void (*cvCallBack)(int, void *);  // Defines a function pointer
   // type pointing to a void function which doesn't take any parameter.
   // cvCallBack callback;  //  Actually defines a member variable of this type.
 
-  void _make_pipe() {
-    cout << "._make_pipe" << endl;
-    if (localSource) _capFullString +=
-        "v4l2src ! ";
-    else _capFullString +=
-        "udpsrc port=" + port + " caps=application/x-rtp ! " +
-        "h264parse !" +
-        codecStore[codec][DEPAY] + " ! " +
-				codecStore[codec][DECODE];
-    if (showLive) _capFullString +=
-		    "tee name=pSplit ! "
-        "queue ! "
-        "videoconvert ! "
-        "autovideosink sync=" + codecStore[codec][SYNC] + " pSplit. ! "
-        "queue ! ";
-		// if (grabVid) _capFullString +=
-		// 		"tee name=vSplit ! "
-		// 		"queue ! "
-		// 		// "h264parse ! "
-		// 		"mpegtsmux ! "
-		// 		"filesink location=" + vidSaveLoc + " vSplit. ! "
-		// 		"queue";
-    _capFullString +=
-		    "videoconvert ! "
-        "appsink drop=true sync=false";
-		cout << _capFullString << endl;
-    cap.open(_capFullString.c_str());
-		if( cap.isOpened() )
-		cout << "Video " << //parser.get<string>("c") <<
-				": width=" << cap.get(CAP_PROP_FRAME_WIDTH) <<
-				", height=" << cap.get(CAP_PROP_FRAME_HEIGHT) <<
-				", nframes=" << cap.get(CAP_PROP_FRAME_COUNT) << endl;
-  }
-
-	void _assemble_trackbars() {
-    for (int g = 0; g < currentFilterCount; g++) {
-      for (int t = 0; t < gstFilters[g]->numTrackbars; t++) {
-				cout << "numTrackbars : " << gstFilters[g]->numTrackbars << endl;
-				cout << "Creating Trackbar: " << gstFilters[g]->trackbars[t].name << endl;
-        createTrackbar(gstFilters[g]->trackbars[t].name, windowName,
-                       &gstFilters[g]->trackbars[t].val,
-                       gstFilters[g]->trackbars[t].cap,
-                       gstFilters[g]->trackbars[t].onChange);
-      }
-    }
-  }
 
 	// void _assemble_get_ROI() {
 	// 	void* userData = nullptr;
@@ -89,17 +41,124 @@ private:
 	// }
 
 public:
-  Codec codec = H264;
+  CodecType codec = H264;
   Mat src, src_gray, dst;
   VideoWriter writer;
   VideoCapture cap;
 	Rect2d ROI;
 
-  string windowName = "window1";
-	bool showLive = false;
-  bool localSource = false;
+  string port = "5000";
+  string _source = "";
+  string _decode = "";
+  string _live = "";
+  string _sink = "";
+  string _sync = "false";
+  string _capFullString = "";
+
+  SourceType sourceType = UDP; // options are UDP, VID, CAM
+  string videoFileLocation = "";
+  CodecType codecType = H264; // H264, VP8, RAW, NONE
+  bool showLive = false;
 	bool grabVid = false;
 	string vidSaveLoc = "video.mp4";
+
+  string windowName = "window1";
+
+
+    void _make_pipe() {
+
+      switch (sourceType) {
+        case UDP: _source += "udpsrc port=" + port + " caps=application/x-rtp ! ";
+                  break;
+        case VID: _source += "filesrc location=" + videoFileLocation + " ! queue ! decodebin ! ";
+                  codecType = NONE;
+                  _sync="true";
+                  break;
+        case CAM: _source += "v4l2src ! ";
+                  break;
+        default:  cout << "Invalid source, setting to cam source...";
+                  sourceType = CAM;
+                  _source += "v4l2src ! ";
+                  break;
+      }
+
+      switch (codecType) {
+        case H265:  if (sourceType == UDP) _decode += "queue ! rtph265depay ! ";
+                    _decode += "queue ! h265parse ! queue ! avdec_h265 ! ";
+                    break;
+        case H264:  if (sourceType == UDP) _decode += "queue ! rtph264depay ! ";
+                    _decode += "queue ! h264parse ! queue ! avdec_h264 ! ";
+                    break;
+        case VP8:   if (sourceType == UDP) _decode += "queue ! rtpvp8depay ! ";
+                    _decode += "queue ! vp8dec threads=4";
+                    break;
+        case RAW:   if (sourceType == UDP) _decode += "queue ! rtprawdepay ! ";
+                    _decode += "queue ! rawvideoparse ! ";
+                    break;
+        case NONE:  _decode += "";
+                    break;
+        default:  cout << "Invalid decode, setting to none...";
+                  codecType = NONE;
+                  _decode = "";
+                  break;
+      }
+
+      if (showLive) _live = "tee name=pSplit ! queue ! videoconvert ! autovideosink sync="+ _sync +" pSplit. ! ";
+
+      _sink = "videoconvert ! appsink drop=true sync="+ _sync;
+      cap.open((_source + _decode + _live + _sink).c_str());
+    	if( cap.isOpened() )
+  		cout << "Video " << //parser.get<string>("c") <<
+  				": width=" << cap.get(CAP_PROP_FRAME_WIDTH) <<
+  				", height=" << cap.get(CAP_PROP_FRAME_HEIGHT) << endl;
+    }
+    //
+    // void _make_pipe() {
+    //   cout << "._make_pipe" << endl;
+    //   if (camSource) _capFullString +=
+    //       "v4l2src ! ";
+    //   else _capFullString +=
+    //       "udpsrc port=" + port + " caps=application/x-rtp ! " +
+    //       "h264parse !" +
+    //       codecStore[codec][DEPAY] + " ! " +
+  	// 			codecStore[codec][DECODE];
+    //   if (showLive) _capFullString +=
+  	// 	    "tee name=pSplit ! "
+    //       "queue ! "
+    //       "videoconvert ! "
+    //       "autovideosink sync=" + codecStore[codec][SYNC] + " pSplit. ! "
+    //       "queue ! ";
+  	// 	// if (grabVid) _capFullString +=
+  	// 	// 		"tee name=vSplit ! "
+  	// 	// 		"queue ! "
+  	// 	// 		// "h264parse ! "
+  	// 	// 		"mpegtsmux ! "
+  	// 	// 		"filesink location=" + vidSaveLoc + " vSplit. ! "
+  	// 	// 		"queue";
+    //   _capFullString +=
+  	// 	    "videoconvert ! "
+    //       "appsink drop=true sync=false";
+  	// 	cout << _capFullString << endl;
+    //   cap.open(_capFullString.c_str());
+  	// 	if( cap.isOpened() )
+  	// 	cout << "Video " << //parser.get<string>("c") <<
+  	// 			": width=" << cap.get(CAP_PROP_FRAME_WIDTH) <<
+  	// 			", height=" << cap.get(CAP_PROP_FRAME_HEIGHT) <<
+  	// 			", nframes=" << cap.get(CAP_PROP_FRAME_COUNT) << endl;
+    // }
+
+  	void _assemble_trackbars() {
+      for (int g = 0; g < currentFilterCount; g++) {
+        for (int t = 0; t < gstFilters[g]->numTrackbars; t++) {
+  				cout << "numTrackbars : " << gstFilters[g]->numTrackbars << endl;
+  				cout << "Creating Trackbar: " << gstFilters[g]->trackbars[t].name << endl;
+          createTrackbar(gstFilters[g]->trackbars[t].name, windowName,
+                         &gstFilters[g]->trackbars[t].val,
+                         gstFilters[g]->trackbars[t].cap,
+                         gstFilters[g]->trackbars[t].onChange);
+        }
+      }
+    }
 
 	void get_ROI() {
 		bool showCrosshair = true;

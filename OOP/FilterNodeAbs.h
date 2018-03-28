@@ -1,5 +1,5 @@
-#ifndef GSTABSFILTER_H // avoid repeated expansion
-#define GSTABSFILTER_H
+#ifndef FILTERNODEABS_H // avoid repeated expansion
+#define FILTERNODEABS_H
 
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -19,8 +19,11 @@ struct TrackbarStruct {
   void (*onChange)(int, void *);
 };
 
-class GstAbsFilter {
+class FilterNodeAbs {
 public:
+  FilterNodeAbs* next;
+  FilterNodeAbs* prev;
+
   int numTrackbars;
   TrackbarStruct *trackbars;
   bool on = true;
