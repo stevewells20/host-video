@@ -75,10 +75,12 @@ public:
                   _sync="true";
                   break;
         case CAM: _source += "v4l2src ! ";
+                  codecType = NONE;
                   break;
         default:  cout << "Invalid source, setting to cam source...";
                   sourceType = CAM;
                   _source += "v4l2src ! ";
+                  codecType = NONE;
                   break;
       }
 
@@ -112,40 +114,7 @@ public:
   				": width=" << cap.get(CAP_PROP_FRAME_WIDTH) <<
   				", height=" << cap.get(CAP_PROP_FRAME_HEIGHT) << endl;
     }
-    //
-    // void _make_pipe() {
-    //   cout << "._make_pipe" << endl;
-    //   if (camSource) _capFullString +=
-    //       "v4l2src ! ";
-    //   else _capFullString +=
-    //       "udpsrc port=" + port + " caps=application/x-rtp ! " +
-    //       "h264parse !" +
-    //       codecStore[codec][DEPAY] + " ! " +
-  	// 			codecStore[codec][DECODE];
-    //   if (showLive) _capFullString +=
-  	// 	    "tee name=pSplit ! "
-    //       "queue ! "
-    //       "videoconvert ! "
-    //       "autovideosink sync=" + codecStore[codec][SYNC] + " pSplit. ! "
-    //       "queue ! ";
-  	// 	// if (grabVid) _capFullString +=
-  	// 	// 		"tee name=vSplit ! "
-  	// 	// 		"queue ! "
-  	// 	// 		// "h264parse ! "
-  	// 	// 		"mpegtsmux ! "
-  	// 	// 		"filesink location=" + vidSaveLoc + " vSplit. ! "
-  	// 	// 		"queue";
-    //   _capFullString +=
-  	// 	    "videoconvert ! "
-    //       "appsink drop=true sync=false";
-  	// 	cout << _capFullString << endl;
-    //   cap.open(_capFullString.c_str());
-  	// 	if( cap.isOpened() )
-  	// 	cout << "Video " << //parser.get<string>("c") <<
-  	// 			": width=" << cap.get(CAP_PROP_FRAME_WIDTH) <<
-  	// 			", height=" << cap.get(CAP_PROP_FRAME_HEIGHT) <<
-  	// 			", nframes=" << cap.get(CAP_PROP_FRAME_COUNT) << endl;
-    // }
+
 
   	void _assemble_trackbars() {
       for (int g = 0; g < currentFilterCount; g++) {

@@ -11,32 +11,35 @@
 
 #include <time.h>
 
-// #include "GstAbsFilter.h"
+#include "GstAbsFilter.h"
 
+#include <iostream>
+using namespace std;
 
 int main(int argc, char **argv) {
+	cout << "TESTING" << endl;
 	int portNum = 5000;
 	if (argc > 1) portNum = atoi(argv[1]);
 	//cout << getBuildInformation() << endl << endl;
-
 	GstStreamCapper gstr(portNum,true);
-	// gstr.showLive = true;
-	gstr.sourceType = VID; //UDP, CAM, VID
-	gstr.videoFileLocation = "/usr/share/OpenCV/samples/data/data/vtest.avi";
-	gstr.codecType = NONE; //
+	gstr.showLive = false;
+	gstr.sourceType = UDP; //UDP, CAM, VID
+	gstr.codec = H264;
+	// gstr.videoFileLocation = "/usr/share/OpenCV/samples/data/data/vtest.avi";
+	// gstr.codecType = NONE;
 	// gstr.resetCap();
 
 	// GstHoughCircle fCircle;
 	// GstFaceDetect fFace;
-	// GstEdgeDetect fEdge;	fEdge.apply_contuors = false; fEdge.apply_hull = false; fEdge.apply_lines = false;
+	GstEdgeDetect fEdge;//	fEdge.apply_contuors = false; fEdge.apply_hull = false; fEdge.apply_lines = false;
 	// GstColorCorrect2 fColor;
 	// GstLaplaceEdgeDetect fLapEdge;
 	// GstBRISKFeatures fBRISK;
 	// GstBRISKDetect fBRISK;
 	// GstTest fTest;
-	GstMotionDetect fMotion;
+	// GstMotionDetect fMotion;
 
-	gstr.addFilter(&fMotion);
+	// gstr.addFilter(&fMotion);
 	// gstr.addFilter(&fCircle);
 	// gstr.addFilter(&fEdge);
 	// gstr.addFilter(&fFace);
@@ -52,6 +55,6 @@ int main(int argc, char **argv) {
 	// gstr.resetCap();
 	// gstr.run();
 
-  cout << "Done!" << endl;
+  // cout << "Done!" << endl;
   return 0;
 }
